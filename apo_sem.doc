@@ -11,7 +11,7 @@ Ve hře se pokusíme implementovat tři herní módy
 Při každém odrazu se rychlost míčku zvýší (předejde se možné nekonečné výměně)
 Před začátkem hry proběhne odpočet 3 2 1.
 Základní funkce s HW, alespoň tři různé periferie
-  -	výstup na RGB diody
+-	výstup na RGB diody
       -	LED1 zasvítí červeně, pokud hráč 1 získá bod
       -	LED2 zasvítí modře, pokud hráč 2 získá bod
   -	výstup na řádku LED
