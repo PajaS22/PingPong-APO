@@ -4,9 +4,9 @@ Pavel Svoboda & Šimon Lehký
 Klasická hra ping-pong pro dva hráče, oba ovládají svou pálku, kterou mohou odrážet míček. Cílem hry je dát soupeři gól, tedy odrazit míček tak, aby to soupeř nezvládl.
 
 Ve hře se pokusíme implementovat tři herní módy
-●	normal: jen pingpong, klasika, kdo dá gól, získá bod
-●	hard: prostředkem začne létat tam a zpět malý čtvereček měnící periodicky barvu, komu se ho povede trefit, ten získá bod navíc
-●	extreme: prostředkem létají i překážky, různě natočené, otáčející se, ... od nich se míček bude odrážet, pálka má setrvačnost a může projíždět bočními stěnami
+  ●	normal: jen pingpong, klasika, kdo dá gól, získá bod
+  ●	hard: prostředkem začne létat tam a zpět malý čtvereček měnící periodicky barvu, komu se ho povede trefit, ten získá bod navíc
+  ●	extreme: prostředkem létají i překážky, různě natočené, otáčející se, ... od nich se míček bude odrážet, pálka má setrvačnost a může projíždět bočními stěnami
 
 Při každém odrazu se rychlost míčku zvýší (předejde se možné nekonečné výměně)
 Před začátkem hry proběhne odpočet 3 2 1.
