@@ -7,4 +7,6 @@ Ping Pong
 -hard: létají tam bonusové body, kdo je trefí, ten je dostane
 -extreme: létají tam i překážky, různě natočené, otáčející se,...
 
+Bitové diody mohou počítat body obou hráčů
+
 (tleskání na konci, zvukové)
