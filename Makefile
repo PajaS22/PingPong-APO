@@ -1,14 +1,15 @@
 CC = arm-linux-gnueabihf-gcc
 CXX = arm-linux-gnueabihf-g++
 
-CPPFLAGS = -I .
+CPPFLAGS = -I . -I ./mzapo
 CFLAGS =-g -std=gnu99 -O1 -Wall
 CXXFLAGS = -g -std=gnu++11 -O1 -Wall
-LDFLAGS = -lrt -lpthread
+LDFLAGS = -lrt -lpthread -lm
 
-SOURCES = change_me.c mzapo_phys.c mzapo_parlcd.c
-#SOURCES += font_prop14x16.c font_rom8x16.c
-TARGET_EXE = change_me
+SOURCES = main.c mzapo_phys.c mzapo_parlcd.c
+SOURCES += font_prop14x16.c font_rom8x16.c
+SOURCES += game.c ball.c paddle.c knobs.c
+TARGET_EXE = pingpong
 #TARGET_IP ?= 192.168.202.127
 ifeq ($(TARGET_IP),)
 ifneq ($(filter debug run,$(MAKECMDGOALS)),)
