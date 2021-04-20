@@ -6,32 +6,32 @@ Klasická hra ping-pong pro dva hráče, oba ovládají svou pálku, kterou moho
 Ve hře se pokusíme implementovat tři herní módy
 ●	normal: jen pingpong, klasika, kdo dá gól, získá bod
 ●	hard: prostředkem začne létat tam a zpět malý čtvereček měnící periodicky barvu, komu se ho povede trefit, ten získá bod navíc
-●	extreme: prostředkem létají i překážky, různě natočené, otáčející se,... od nich se míček bude odrážet
+●	extreme: prostředkem létají i překážky, různě natočené, otáčející se, ... od nich se míček bude odrážet, pálka má setrvačnost a může projíždět bočními stěnami
 
 Při každém odrazu se rychlost míčku zvýší (předejde se možné nekonečné výměně)
 Před začátkem hry proběhne odpočet 3 2 1.
 Základní funkce s HW, alespoň tři různé periferie
--	výstup na RGB diody
--	LED1 zasvítí červeně, pokud hráč 1 získá bod
--	LED2 zasvítí modře, pokud hráč 2 získá bod
--	výstup na řádku LED
--	bitové diody mohou počítat body obou hráčů 
--	na jednom konci budou přibývat body jednoho, na druhém konci body druhého (tj. hráč 1 získá bod -> rozsvítí se bitová dioda a zůstane svítit)
--	výstup na sériový port
--	debugovací hlášky
--	vstup otočných voličů
--	ovládání pálky levým a pravým voličem
--	výběr módu v menu pomocí prostředního voliče, potvrzení pomocí stisku voliče
--	pro předčasné ukončení zápasu je možné podržet prostřední (zelený) volič, tím se uskuteční návrat do menu
--	implementace systémového volání (obsluha/zpracování výjimky)
--	audio výstup (možná)
--	tleskání výherci / hláška Forresta Gumpa
+  -	výstup na RGB diody
+      -	LED1 zasvítí červeně, pokud hráč 1 získá bod
+      -	LED2 zasvítí modře, pokud hráč 2 získá bod
+  -	výstup na řádku LED
+      -	bitové diody mohou počítat body obou hráčů 
+      -	na jednom konci budou přibývat body jednoho, na druhém konci body druhého (tj. hráč 1 získá bod -> rozsvítí se bitová dioda a zůstane svítit)
+  -	výstup na sériový port
+      -	debugovací hlášky
+  -	vstup otočných voličů
+      -	ovládání pálky levým a pravým voličem
+      -	výběr módu v menu pomocí prostředního voliče, potvrzení pomocí stisku voliče
+      -	pro předčasné ukončení zápasu je možné podržet prostřední (zelený) volič, tím se uskuteční návrat do menu
+  -	implementace systémového volání (obsluha/zpracování výjimky)
+  -	audio výstup (možná)
+      -	tleskání výherci / hláška Forresta Gumpa
 Výstup textu na grafický display/frame-buffer
--	výpis fontu: text menu
--	výpis s proměnnou šířkou znaku
--	čárová grafika nebo menu
--	3 režimy: normal / hard / extreme
--	možnost Exit
+  -	výpis fontu: text menu
+  -	výpis s proměnnou šířkou znaku
+  -	čárová grafika nebo menu
+      -	3 režimy: normal / hard / extreme
+      -	možnost Exit
 Kvalita provedení
--	bude TOP!
+  -	bude TOP!
 
