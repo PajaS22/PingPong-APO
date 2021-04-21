@@ -7,6 +7,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "font_types.h"
 #include "mzapo_parlcd.h"
 #include "mzapo_phys.h"
 #include "mzapo_regs.h"
@@ -23,18 +24,24 @@
                 hsv2rgb_lcd(w, 255, (h * 255) / DISPLAY_HEIGTH));              \
         }                                                                      \
     }
+
 unsigned int hsv2rgb_lcd(int hue, int saturation, int value);
 bool lcd_initialization(unsigned char **ret_lcd_mem_base);
+int char_width(int ch);
+void draw_pixel_big(int x, int y, int scale, unsigned short color, unsigned short *frame_buff);
+void draw_pixel(int x, int y, unsigned short color, unsigned short *frame_buff);
+void draw_char(int x, int y, char ch, unsigned short color, int scale, unsigned short *frame_buff);
 
+font_descriptor_t *fdes;
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]){
     unsigned char *lcd_mem_base;
     if (lcd_initialization(&lcd_mem_base)) {
-        unsigned short *fb;
-        fb = (unsigned short *)malloc(DISPLAY_HEIGTH * DISPLAY_WIDTH *
+        unsigned short *frame_buff;
+        frame_buff = (unsigned short *)malloc(DISPLAY_HEIGTH * DISPLAY_WIDTH *
                                       sizeof(unsigned short));
-        if (fb == NULL) {
+        fdes = &font_winFreeSystem14x16;
+        if (frame_buff == NULL) {
             fprintf(stderr, "ERROR: Memory could not be allocated!\n");
         } else {
             int offset = 20;
@@ -51,12 +58,13 @@ int main(int argc, char *argv[])
                         pixel = hsv2rgb_lcd(255, 255, 255);
                     }
                     // write pixel
-                    fb[w + DISPLAY_WIDTH * h] = pixel;
+                    frame_buff[w + DISPLAY_WIDTH * h] = pixel;
                 }
             }
+            draw_char(25, 25, 'A', hsv2rgb_lcd(0, 0, 0), 10, frame_buff);
             parlcd_write_cmd(lcd_mem_base, CLEAN_CODE);
             for (int ptr = 0; ptr < DISPLAY_WIDTH * DISPLAY_HEIGTH; ++ptr) {
-                parlcd_write_data(lcd_mem_base, fb[ptr]);
+                parlcd_write_data(lcd_mem_base, frame_buff[ptr]);
             }
         }
     }
@@ -64,8 +72,7 @@ int main(int argc, char *argv[])
     return EXIT_SUCCESS;
 }
 
-bool lcd_initialization(unsigned char **ret_lcd_mem_base)
-{
+bool lcd_initialization(unsigned char **ret_lcd_mem_base){
     bool ret = true;
     unsigned char *lcd_mem_base;
     lcd_mem_base = map_phys_address(PARLCD_REG_BASE_PHYS, PARLCD_REG_SIZE, 0);
@@ -80,8 +87,7 @@ bool lcd_initialization(unsigned char **ret_lcd_mem_base)
     return ret;
 }
 
-unsigned int hsv2rgb_lcd(int hue, int saturation, int value)
-{
+unsigned int hsv2rgb_lcd(int hue, int saturation, int value){
     hue = (hue % 360);
     float f = ((hue % 60) / 60.0);
     int p = (value * (255 - saturation)) / 255;
@@ -117,4 +123,49 @@ unsigned int hsv2rgb_lcd(int hue, int saturation, int value)
     g >>= 2;
     b >>= 3;
     return (((r & 0x1f) << 11) | ((g & 0x3f) << 5) | (b & 0x1f));
+}
+
+void draw_char(int x, int y, char ch, unsigned short color, int scale, unsigned short *frame_buff){
+    int w = char_width(ch);
+    const font_bits_t *ptr_data;
+    if ((ch >= fdes->firstchar) && (ch - fdes->firstchar < fdes->size)) { //the char is within the struct
+        if (fdes->offset) { //letters' offsets are defined
+            ptr_data = &fdes->bits[fdes->offset[ch - fdes->firstchar]];
+        } else {
+            int bw = (fdes->maxwidth + 15) / 16; // ???
+            ptr_data = &fdes->bits[(ch - fdes->firstchar) * bw * fdes->height];
+        }
+        for (int i = 0; i < fdes->height; i++) {
+            font_bits_t val = *ptr_data;
+            for (int j = 0; j < w; j++) { //every column
+                if ((val & 0x8000) != 0) { //0000 1000 0000 0000 0000
+                    draw_pixel_big(x + scale * j, y + scale * i, scale, color, frame_buff);
+                } val <<= 1;
+            } ptr_data++;
+        }
+    }
+}
+
+void draw_pixel(int x, int y, unsigned short color, unsigned short *frame_buff){
+    if (x >= 0 && x < DISPLAY_WIDTH && y >= 0 && y < DISPLAY_HEIGTH) {
+        frame_buff[x + DISPLAY_WIDTH * y] = color;
+    }
+}
+
+void draw_pixel_big(int x, int y, int scale, unsigned short color, unsigned short *frame_buff){
+    for (int i = 0; i < scale; ++i) {
+        for (int j = 0; j < scale; ++j) {
+            draw_pixel(x + i, y + j, color, frame_buff);
+        }
+    }
+}
+
+int char_width(int ch){
+    int width;
+    if (!fdes->width) {
+        width = fdes->maxwidth;
+    } else {
+        width = fdes->width[ch - fdes->firstchar];
+    }
+    return width;
 }
