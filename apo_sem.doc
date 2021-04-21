@@ -8,8 +8,10 @@ Ve hře se pokusíme implementovat tři herní módy
   ● hard: prostředkem začne létat tam a zpět malý čtvereček měnící periodicky barvu, komu se ho povede trefit, ten získá bod navíc
   ● extreme: prostředkem létají i překážky, různě natočené, otáčející se, ... od nich se míček bude odrážet, pálka má setrvačnost a může projíždět bočními stěnami
 
-Při každém odrazu se rychlost míčku zvýší (předejde se možné nekonečné výměně)
+Při každém odrazu se rychlost míčku zvýší (předejde se možné nekonečné výměně).
 Před začátkem hry proběhne odpočet 3 2 1.
+Hru bude možné pozastavit, zobrazí se 'pause menu', poté bude možnost se navrátit ke hře.
+
 Základní funkce s HW, alespoň tři různé periferie
   - výstup na RGB diody
       -	LED1 zasvítí červeně, pokud hráč 1 získá bod
