@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+#include <string.h>
+#include <pthread.h>
 
 #include "font_types.h"
 #include "mzapo_parlcd.h"
@@ -31,6 +33,11 @@ int char_width(int ch);
 void draw_pixel_big(int x, int y, int scale, unsigned short color, unsigned short *frame_buff);
 void draw_pixel(int x, int y, unsigned short color, unsigned short *frame_buff);
 void draw_char(int x, int y, char ch, unsigned short color, int scale, unsigned short *frame_buff);
+void draw_string(int x, int y, unsigned short color, int scale, unsigned short *frame_buff, char *string);
+
+void draw_grounded_string(int x, int y, int padding_x, int padding_y, unsigned short color,
+    unsigned short color_background, int scale, unsigned short *frame_buff, char *string);
+void print_menu(int x, int y, int selected, unsigned short *frame_buff);
 
 font_descriptor_t *fdes;
 
@@ -44,24 +51,16 @@ int main(int argc, char *argv[]){
         if (frame_buff == NULL) {
             fprintf(stderr, "ERROR: Memory could not be allocated!\n");
         } else {
-            int offset = 20;
-            int square_size = 80;
-            uint16_t pixel;
-            for (int h = 0; h < DISPLAY_HEIGTH; ++h) {
-                for (int w = 0; w < DISPLAY_WIDTH; ++w) {
-                    if (h >= offset && h - offset < square_size &&
-                        w >= offset && w - offset < square_size) {
-                        // write square
-                        pixel = hsv2rgb_lcd(120, 255, 255);
-                    } else {
-                        // write everything else
-                        pixel = hsv2rgb_lcd(255, 255, 255);
-                    }
-                    // write pixel
-                    frame_buff[w + DISPLAY_WIDTH * h] = pixel;
-                }
-            }
-            draw_char(25, 25, 'A', hsv2rgb_lcd(0, 0, 0), 10, frame_buff);
+            /*
+            draw_char(110, 25, 'M', hsv2rgb_lcd(0, 0, 0), 5, frame_buff);
+            draw_char(190, 25, 'E', hsv2rgb_lcd(0, 0, 0), 5, frame_buff);
+            draw_char(250, 25, 'N', hsv2rgb_lcd(0, 0, 0), 5, frame_buff);
+            draw_char(320, 25, 'U', hsv2rgb_lcd(0, 0, 0), 5, frame_buff);
+            */
+            print_menu(DISPLAY_WIDTH/3, DISPLAY_HEIGTH/8, 3, frame_buff);
+            //draw_string(10, 10, 0, 5, frame_buff, "Hello world!");
+            //draw_grounded_string(70, 200, 2, 2, 0, hsv2rgb_lcd(120, 255, 255), 3, frame_buff, "Hello world!");
+
             parlcd_write_cmd(lcd_mem_base, CLEAN_CODE);
             for (int ptr = 0; ptr < DISPLAY_WIDTH * DISPLAY_HEIGTH; ++ptr) {
                 parlcd_write_data(lcd_mem_base, frame_buff[ptr]);
@@ -168,4 +167,57 @@ int char_width(int ch){
         width = fdes->width[ch - fdes->firstchar];
     }
     return width;
+}
+
+void draw_string(int x, int y, unsigned short color, int scale, unsigned short *frame_buff, char *string){
+    int w;
+    for(char *c = string; *c != '\0'; c++){
+        w = char_width(*c)*scale;
+        if(x + w >=  DISPLAY_WIDTH){
+            // out of display
+            break;
+        }
+        draw_char(x, y, *c, color, scale, frame_buff);
+        x += w;
+    }
+}
+
+void draw_grounded_string(int x, int y, int padding_x, int padding_y, unsigned short color,
+    unsigned short color_background, int scale, unsigned short *frame_buff, char *string) {
+    int width = 0;
+    for(char *c = string; *c != '\0'; c++){
+        width += char_width(*c);
+    }
+    width += padding_x * 2;
+    int height = fdes->height + 2 * padding_y;
+    int ground_x = x - padding_x;
+    int ground_y = y - padding_y;
+    if (ground_x >= 0 && ground_y >= 0 && ground_x + width < DISPLAY_WIDTH && ground_y + height < DISPLAY_HEIGTH){
+        // print ground
+        for (int h = 0; h < height; ++h) {
+            for (int w = 0; w < width; ++w) {
+                draw_pixel_big(ground_x + w*scale, ground_y + h*scale, scale, color_background, frame_buff);
+            }
+        }
+    }
+    draw_string(x, y, color, scale, frame_buff, string);
+}
+
+void print_menu(int x, int y, int selected, unsigned short *frame_buff) {
+    char *menu[] = {"MENU", "Normal", "Hard", "Exit"};
+    int menu_num = sizeof(menu)/sizeof(char*);
+    int line_padding = 3;
+    int ground_padding = 2;
+    unsigned short color = hsv2rgb_lcd(0, 0, 255);
+    unsigned short color_on_ground = hsv2rgb_lcd(0, 0, 0); 
+    unsigned short color_background = hsv2rgb_lcd(120, 255, 255);
+    int scale = 3;
+    for (int i = 0; i < menu_num; ++i){
+        printf("item %d\n", i);
+        if (i == selected)
+            draw_grounded_string(x, y, ground_padding, ground_padding, color_on_ground, color_background, scale, frame_buff, menu[i]);
+        else 
+            draw_string(x, y, color, scale, frame_buff, menu[i]);
+        y += (fdes->height + line_padding) * scale;
+    }
 }
