@@ -57,6 +57,7 @@ pthread_mutex_t mtx;
 
 struct shared {
     bool quit;
+    bool start;
     int move;
 } shared_data;
 
@@ -80,6 +81,7 @@ int main(int argc, char *argv[])
 
             // threads
             shared_data.quit = false;
+            shared_data.start = false;
             shared_data.move = 0;
             bool quit = false;
 
@@ -93,9 +95,11 @@ int main(int argc, char *argv[])
 
             int move = 0;
             int selected = 0;
+            bool start = false;
             while (!quit) {
                 pthread_mutex_lock(&mtx);
                 move = shared_data.move;
+                start = shared_data.start;
                 pthread_mutex_unlock(&mtx);
 
                 if (move) {
@@ -109,17 +113,17 @@ int main(int argc, char *argv[])
                     shared_data.move = 0;
                     pthread_mutex_unlock(&mtx);
                 }
-
                 print_menu(MENU_OFFSET_X, MENU_OFFSET_Y, selected, frame_buff);
                 parlcd_write_cmd(lcd_mem_base, CLEAN_CODE);
                 for (int ptr = 0; ptr < DISPLAY_WIDTH * DISPLAY_HEIGHT; ++ptr) {
                     parlcd_write_data(lcd_mem_base, frame_buff[ptr]);
                 }
+                if (start) {
+                    countdown(MENU_OFFSET_X, MENU_OFFSET_Y, frame_buff,) {
+                }
                 pthread_mutex_lock(&mtx);
                 pthread_cond_wait(&condvar, &mtx);
                 quit = shared_data.quit;
-                if (quit == 1) {
-                    printf("quit = %d\n", quit);
                 }
                 pthread_mutex_unlock(&mtx);
             }
@@ -285,10 +289,26 @@ void draw_grounded_string(int x, int y, int padding_x, int padding_y,
     draw_string(x, y, color, scale, frame_buff, string);
 }
 
+void countdown(int x, int y, unsigned short *frame_buff,) {
+    SET_DISPLAY_BLACK
+    int *countdown[] = {3, 2, 1};
+    char start = "START!";
+    int countdown_num = sizeof(countdown) / sizeof(int*);
+    unsigned short color = hsv2rgb_lcd(0, 0, 255);
+    for (int i = 0; i < countdown_num; ++i) {
+        draw_grounded_string(x, y, ground_padding, ground_padding, color,
+                                 BACKGROUND_COLOR, scale, frame_buff, countdown[i]);
+        sleep(0.5);
+    } draw_grounded_string(x, y, ground_padding, ground_padding, color,
+                                 BACKGROUND_COLOR, scale, frame_buff, start); 
+    sleep(0.5);
+    SET_DISPLAY_BLACK
+}
+
 void print_menu(int x, int y, int selected, unsigned short *frame_buff)
 {
     char *menu[] = {"MENU", "Normal", "Hard", "Exit"};
-    int menu_num = sizeof(menu) / sizeof(char *);
+    int menu_num = sizeof(menu) / sizeof(char*);
     int line_padding = 3;
     int ground_padding = 2;
     unsigned short color = hsv2rgb_lcd(0, 0, 255);
@@ -328,6 +348,10 @@ void *terminal_listening()
             shared_data.move = 1; // move down in the menu
             pthread_mutex_unlock(&mtx);
             break;
+        case 'd':
+            pthread_mutex_lock(&mtx);
+            shared_data.start = true; // start the game
+            pthread_mutex_unlock(&mtx);
         case 'q':
             quit = true;
             break;
@@ -350,8 +374,7 @@ void *knob_listening()
     pthread_mutex_lock(&mtx);
     bool quit = shared_data.quit;
     pthread_mutex_unlock(&mtx);
-    while (!quit) {
-        // get input from knobs
+    while (!quit) { // get input from knobs
         pthread_mutex_lock(&mtx);
         if (quit)
             shared_data.quit = quit;
