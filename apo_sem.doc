@@ -11,6 +11,7 @@ Ve hře se pokusíme implementovat tři herní módy
 Při každém odrazu se rychlost míčku zvýší (předejde se možné nekonečné výměně).
 Před začátkem hry proběhne odpočet 3 2 1.
 Hru bude možné pozastavit, zobrazí se 'pause menu', poté bude možnost se navrátit ke hře.
+Prostředkem budou lítat i jiné bonusy než jen na zisk bodů navíc, může tam být bonus dočasně měnící velikost pálky, měnící velikost míčku, měnící zakřivenost prostoru,...
 
 Základní funkce s HW, alespoň tři různé periferie
   - výstup na RGB diody
