@@ -1,9 +1,6 @@
 // file for handling game objects
 // will handle colisions
 #include "game.h"
-#include "LCD_output.h"
-#include "ball.h"
-#include "paddle.h"
 
 int level;
 unsigned short *frame_buff;
@@ -19,9 +16,22 @@ void start_game(unsigned short *fb, int lev){
 }
 
 void game_loop(){
-    draw_ball((Position){.X = 100, .Y = 100}, 10, WHITE, frame_buff);
-    draw_paddle((Position){.X = 0, .Y = 20}, RED, frame_buff);
-    draw_paddle((Position){.X = DISPLAY_WIDTH-PADDLE_WIDTH, .Y = 20}, BLUE, frame_buff);
+    Ball ball = (Ball){.pos = (Position){100, 100}, .velocity = (Position){1, -2}, .radius = 10, .color = WHITE};
+    Paddle left = (Paddle){.pos = (Position){0, 20}, .color = RED, .height = PADDLE_LENGTH, .width = PADDLE_WIDTH};
+    Paddle right = (Paddle){.pos = (Position){DISPLAY_WIDTH-PADDLE_WIDTH, 20}, .color = BLUE, .height = PADDLE_LENGTH, .width = PADDLE_WIDTH};
+    draw_ball(ball.pos, ball.radius, ball.color, frame_buff);
+    draw_paddle(left.pos, left.color, frame_buff);
+    draw_paddle(right.pos, right.color, frame_buff);
     update_display(frame_buff);
-    sleep(5);
+    bool goal = false;
+    while(!goal){
+        Position old = ball.pos;
+        int r = move_ball(&ball, &left, &right);
+        if(r)
+            goal = true;
+        update_ball(frame_buff, (Ball){.pos = old, .radius = ball.radius, .color = ball.color}, ball);
+        update_display(frame_buff);
+        sleep(0.01);
+    }
+    sleep(1);
 } 

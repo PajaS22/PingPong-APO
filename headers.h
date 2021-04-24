@@ -10,6 +10,7 @@
 #include <termios.h>
 #include <time.h>
 #include <unistd.h>
+#include <math.h>
 
 typedef struct{
     int X;

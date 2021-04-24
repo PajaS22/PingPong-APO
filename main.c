@@ -45,6 +45,7 @@ int main(int argc, char *argv[])
             int move = 0;
             int selected = 0;
             bool start = false;
+            printf("printing menu\n");
             print_menu(MENU_OFFSET_X, MENU_OFFSET_Y, selected, frame_buff);
             update_display(frame_buff);
 
