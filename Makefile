@@ -18,7 +18,8 @@ ifeq ($(TARGET_IP),)
 ifneq ($(filter debug run,$(MAKECMDGOALS)),)
 $(warning The target IP address is not set)
 $(warning Run as "TARGET_IP=192.168.202.xxx make run" or modify Makefile)
-TARGET_IP ?= 192.168.202.175
+TARGET_IP ?= 192.168.202.214
+#TARGET_IP=192.168.202.214 make run
 endif
 endif
 TARGET_DIR ?= /tmp/$(shell whoami)
