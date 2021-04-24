@@ -23,15 +23,15 @@ bool lcd_initialization(unsigned char **ret_lcd_mem_base) {
     parlcd_hx8357_init(lcd_mem_base);
 
     CLEAR_DISPLAY(lcd_mem_base);
-    set_display_black();
     *ret_lcd_mem_base = lcd_mem_base;
     return ret;
 }
 
-void set_display_black(){
+void set_display_black(unsigned short *frame_buff){
     for (int h = 0; h < DISPLAY_HEIGHT; ++h) {                   
         for (int w = 0; w < DISPLAY_WIDTH; ++w) {                
             parlcd_write_data(lcd_mem_base, BLACK);
+            frame_buff[w+h*DISPLAY_WIDTH] = BLACK;
         }                                                        
     }
 }
@@ -109,10 +109,8 @@ void draw_char(int x, int y, char ch, unsigned short color, int scale,
                 if ((val & 0x8000) != 0) { // 0000 1000 0000 0000 0000
                     draw_pixel_big(x + scale * j, y + scale * i, scale, color,
                                    frame_buff);
-                }
-                val <<= 1;
-            }
-            ptr_data++;
+                } val <<= 1;
+            } ptr_data++;
         }
     }
 }
@@ -175,9 +173,9 @@ void print_menu(int x, int y, int selected, unsigned short *frame_buff) {
     int menu_num = sizeof(menu) / sizeof(char *);
     int line_padding = 3;
     int ground_padding = 2;
-    unsigned short color = hsv2rgb_lcd(0, 0, 255);
-    unsigned short color_on_ground = hsv2rgb_lcd(0, 0, 0);
-    unsigned short color_background = hsv2rgb_lcd(120, 255, 255);
+    unsigned short color = WHITE;
+    unsigned short color_on_ground = BLACK;
+    unsigned short color_background = GREEN;
 
     int scale = 3;
     for (int i = 0; i < menu_num; ++i) {
@@ -192,18 +190,17 @@ void print_menu(int x, int y, int selected, unsigned short *frame_buff) {
     }
 }
 
-void countdown(int x, int y, unsigned short *frame_buff) {
+void countdown(int x, int y, int scale, unsigned short *frame_buff) {
     printf("counting\n");
     int countdown[] = {3, 2, 1};
     char *start = "START!";
-    int scale = 3;
     int ground_padding = 2;
     char tmp[2];
     int countdown_num = sizeof(countdown) / sizeof(int);
-    unsigned short color = hsv2rgb_lcd(0, 0, 255);
+    unsigned short color = WHITE;
     for (int i = 0; i < countdown_num; ++i) {
         sprintf(tmp, "%d", countdown[i]);
-        draw_grounded_string(x, y, ground_padding, ground_padding, color,
+        draw_grounded_string(x + 95, y, ground_padding, ground_padding, color,
                              BACKGROUND_COLOR, scale, frame_buff, tmp);
         update_display(frame_buff);
         sleep(1);
@@ -214,5 +211,21 @@ void countdown(int x, int y, unsigned short *frame_buff) {
     sleep(1);
     draw_grounded_string(x, y, ground_padding, ground_padding, BACKGROUND_COLOR,
                          BACKGROUND_COLOR, scale, frame_buff, start);
+    update_display(frame_buff);
+}
+
+void goodbye(unsigned short *frame_buff) {
+    char *greeting = "GOODBYE!";
+    int ground_padding = 2;
+    unsigned short color = WHITE;
+    int scale = 4;
+    int x = 90;
+    int y = 120;
+    set_display_black(frame_buff);
+    draw_grounded_string(x, y, ground_padding, ground_padding, color,
+                         BACKGROUND_COLOR, scale, frame_buff, greeting);
+    update_display(frame_buff);
+    sleep(2);
+    set_display_black(frame_buff);
     update_display(frame_buff);
 }

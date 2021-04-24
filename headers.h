@@ -1,5 +1,5 @@
 #ifndef HEADERS_H
-#define HEADERS_Hs
+#define HEADERS_H
 
 #include <pthread.h>
 #include <stdbool.h>
@@ -10,5 +10,10 @@
 #include <termios.h>
 #include <time.h>
 #include <unistd.h>
+
+typedef struct{
+    int x;
+    int y;
+}Position;
 
 #endif

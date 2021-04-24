@@ -11,7 +11,7 @@ SOURCES = main.c mzapo_phys.c mzapo_parlcd.c
 SOURCES += font_prop14x16.c font_rom8x16.c
 SOURCES += paddle.c ball.c knobs.c game.c LCD_output.c
 
-TARGET_EXE = main
+TARGET_EXE = pingpong
 
 #TARGET_IP ?= 192.168.202.127
 ifeq ($(TARGET_IP),)

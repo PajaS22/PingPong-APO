@@ -4,5 +4,6 @@
 #include "headers.h"
 
 void start_game();
+enum{Normal, Hard, Extreme};
 
 #endif

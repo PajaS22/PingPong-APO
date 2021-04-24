@@ -12,6 +12,8 @@
 #define CLEAN_CODE 0x2c
 #define CLEAR_DISPLAY(lcd_mem_base) parlcd_write_cmd(lcd_mem_base, CLEAN_CODE);
 #define BLACK 0
+#define WHITE hsv2rgb_lcd(0, 0, 255)
+#define GREEN hsv2rgb_lcd(120, 255, 255)
     
 bool display_init();
 bool lcd_initialization(unsigned char **ret_lcd_mem_base);
@@ -27,7 +29,8 @@ void draw_grounded_string(int x, int y, int padding_x, int padding_y,
                           unsigned short color, unsigned short color_background,
                           int scale, unsigned short *frame_buff, char *string);
 void print_menu(int x, int y, int selected, unsigned short *frame_buff);
-void countdown(int x, int y, unsigned short *frame_buff);
+void countdown(int x, int y, int scale, unsigned short *frame_buff);
+void goodbye(unsigned short *frame_buff);
 
 #endif
 

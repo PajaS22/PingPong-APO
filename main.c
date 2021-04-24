@@ -68,28 +68,42 @@ int main(int argc, char *argv[])
                         pthread_join(thrs[i], NULL);
                     }
                     printf("All threads joined, starting game\n");
-                    start_game();
+                    if(selected + 1 == MENU_SELECTION){
+                        printf("exit selected\n");
+                        // exit selected
+                        pthread_mutex_lock(&mtx);
+                        shared_data.quit = true;
+                        pthread_mutex_unlock(&mtx);
+                    }
+                    else{
+                        start_game(frame_buff, selected);
 
-                    //game ended
-                    pthread_create(&thrs[0], NULL, terminal_listening, NULL);
-                    pthread_create(&thrs[1], NULL, knob_listening, NULL);
-                    start = false;
-                    pthread_mutex_lock(&mtx);
-                    shared_data.start = false;
-                    pthread_mutex_unlock(&mtx);
+                        //game ended
+                        pthread_create(&thrs[0], NULL, terminal_listening, NULL);
+                        pthread_create(&thrs[1], NULL, knob_listening, NULL);
+                        start = false;
+                        pthread_mutex_lock(&mtx);
+                        shared_data.start = false;
+                        pthread_mutex_unlock(&mtx);
 
+                        print_menu(MENU_OFFSET_X, MENU_OFFSET_Y, selected, frame_buff);
+                        update_display(frame_buff);
+                    }
                 }
                 pthread_mutex_lock(&mtx);
-                pthread_cond_wait(&condvar, &mtx);
+                if(!start)
+                    pthread_cond_wait(&condvar, &mtx);
                 quit = shared_data.quit;
                 start = shared_data.start;
                 move = shared_data.move;
                 pthread_mutex_unlock(&mtx);
             }
             fprintf(stderr, "Main finished!\n");
-
-            for (int i = 0; i < num_of_threads; ++i) {
-                pthread_join(thrs[i], NULL);
+            goodbye(frame_buff);
+            if(!start){
+                for (int i = 0; i < num_of_threads; ++i) {
+                    pthread_join(thrs[i], NULL);
+                }
             }
             fprintf(stderr, "All threads finished!\n");
             call_stty(1);
