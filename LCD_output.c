@@ -23,9 +23,24 @@ bool lcd_initialization(unsigned char **ret_lcd_mem_base) {
     parlcd_hx8357_init(lcd_mem_base);
 
     CLEAR_DISPLAY(lcd_mem_base);
-    SET_DISPLAY_BLACK
+    set_display_black();
     *ret_lcd_mem_base = lcd_mem_base;
     return ret;
+}
+
+void set_display_black(){
+    for (int h = 0; h < DISPLAY_HEIGHT; ++h) {                   
+        for (int w = 0; w < DISPLAY_WIDTH; ++w) {                
+            parlcd_write_data(lcd_mem_base, BLACK);
+        }                                                        
+    }
+}
+
+void update_display(unsigned short *frame_buff) {
+    parlcd_write_cmd(lcd_mem_base, CLEAN_CODE);
+    for (int ptr = 0; ptr < DISPLAY_WIDTH * DISPLAY_HEIGHT; ++ptr) {
+        parlcd_write_data(lcd_mem_base, frame_buff[ptr]);
+    }
 }
 
 unsigned int hsv2rgb_lcd(int hue, int saturation, int value) {
@@ -90,7 +105,7 @@ void draw_char(int x, int y, char ch, unsigned short color, int scale,
         }
         for (int i = 0; i < fdes->height; i++) {
             font_bits_t val = *ptr_data;
-            for (int j = 0; j < w; j++) {  // every column
+            for (int j = 0; j < w; j++) {
                 if ((val & 0x8000) != 0) { // 0000 1000 0000 0000 0000
                     draw_pixel_big(x + scale * j, y + scale * i, scale, color,
                                    frame_buff);
@@ -153,13 +168,6 @@ void draw_grounded_string(int x, int y, int padding_x, int padding_y,
         }
     }
     draw_string(x, y, color, scale, frame_buff, string);
-}
-
-void update_display(unsigned short *frame_buff) {
-    parlcd_write_cmd(lcd_mem_base, CLEAN_CODE);
-    for (int ptr = 0; ptr < DISPLAY_WIDTH * DISPLAY_HEIGHT; ++ptr) {
-        parlcd_write_data(lcd_mem_base, frame_buff[ptr]);
-    }
 }
 
 void print_menu(int x, int y, int selected, unsigned short *frame_buff) {

@@ -4,5 +4,5 @@
 #include "LCD_output.h"
 
 void start_game(){
-
+    set_display_black();
 }

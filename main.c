@@ -74,6 +74,10 @@ int main(int argc, char *argv[])
                     pthread_create(&thrs[0], NULL, terminal_listening, NULL);
                     pthread_create(&thrs[1], NULL, knob_listening, NULL);
                     start = false;
+                    pthread_mutex_lock(&mtx);
+                    shared_data.start = false;
+                    pthread_mutex_unlock(&mtx);
+
                 }
                 pthread_mutex_lock(&mtx);
                 pthread_cond_wait(&condvar, &mtx);
@@ -115,7 +119,9 @@ void *terminal_listening() {
             pthread_mutex_unlock(&mtx);
             break;
         case 'd':
-            start = true;
+            pthread_mutex_lock(&mtx);
+            shared_data.start = true;
+            pthread_mutex_unlock(&mtx);
             break;
         case 'q':
             quit = true;
@@ -126,10 +132,7 @@ void *terminal_listening() {
             shared_data.quit = quit;
         else
             quit = shared_data.quit;
-        if (start)
-            shared_data.start = start;
-        else
-            start = shared_data.start;
+        start = shared_data.start;
         pthread_cond_broadcast(&condvar);
         pthread_mutex_unlock(&mtx);
     }
