@@ -79,12 +79,12 @@ int main(int argc, char *argv[])
                         start_game(frame_buff, selected);
 
                         //game ended
-                        pthread_create(&thrs[0], NULL, terminal_listening, NULL);
-                        pthread_create(&thrs[1], NULL, knob_listening, NULL);
                         start = false;
                         pthread_mutex_lock(&mtx);
                         shared_data.start = false;
                         pthread_mutex_unlock(&mtx);
+                        pthread_create(&thrs[0], NULL, terminal_listening, NULL);
+                        pthread_create(&thrs[1], NULL, knob_listening, NULL);
 
                         print_menu(MENU_OFFSET_X, MENU_OFFSET_Y, selected, frame_buff);
                         update_display(frame_buff);

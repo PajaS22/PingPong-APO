@@ -12,8 +12,8 @@
 #include <unistd.h>
 
 typedef struct{
-    int x;
-    int y;
+    int X;
+    int Y;
 }Position;
 
 #endif

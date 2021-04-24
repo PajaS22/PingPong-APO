@@ -2,8 +2,9 @@
 #define GAME_H
 
 #include "headers.h"
+enum{Normal, Hard, Extreme};
 
 void start_game();
-enum{Normal, Hard, Extreme};
+void game_loop();
 
 #endif

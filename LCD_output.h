@@ -13,7 +13,9 @@
 #define CLEAR_DISPLAY(lcd_mem_base) parlcd_write_cmd(lcd_mem_base, CLEAN_CODE);
 #define BLACK 0
 #define WHITE hsv2rgb_lcd(0, 0, 255)
-#define GREEN hsv2rgb_lcd(120, 255, 255)
+#define RED hsv2rgb_lcd(5, 235, 255)
+#define GREEN hsv2rgb_lcd(145, 196, 255)
+#define BLUE hsv2rgb_lcd(199, 230, 255)
     
 bool display_init();
 bool lcd_initialization(unsigned char **ret_lcd_mem_base);
