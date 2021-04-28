@@ -1,12 +1,12 @@
 // file for handling game objects
 // will handle colisions
 #include "game.h"
-#define UPDATE_RATE 500
+#define UPDATE_RATE 300
 #define INITIAL_BALL_POSITION ((Position){.X = 100, .Y = 100})
-#define INITIAL_BALL_SPEED ((Velocity){.X = 0.5, .Y = 0.5})
+#define INITIAL_BALL_SPEED ((Velocity){.X = 0.2, .Y = 0.1})
 #define INITIAL_BALL_RADIUS 10
 #define INITIAL_PADDLE_LEFT ((Position){.X = 0, .Y = 0})
-#define INITIAL_PADDLE_RIGHT ((Position){.X = DISPLAY_WIDTH - PADDLE_WIDTH, .Y = 0})
+#define INITIAL_PADDLE_RIGHT ((Position){.X = DISPLAY_WIDTH - PADDLE_WIDTH, .Y = 150})
 
 
 void *terminal_listening();

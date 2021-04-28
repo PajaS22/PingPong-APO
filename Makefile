@@ -1,14 +1,16 @@
 CC = arm-linux-gnueabihf-gcc
 CXX = arm-linux-gnueabihf-g++
 
-CPPFLAGS = -I .
+SRC_PATH = mzapo
+
+CPPFLAGS = -I . -I $(SRC_PATH)
 CFLAGS =-g -std=gnu99 -O1 -Wall
 CXXFLAGS = -g -std=gnu++11 -O1 -Wall
-LDFLAGS = 
+LDFLAGS = -L
 LDLIBS = -lrt -lpthread -lm
 
-SOURCES = main.c mzapo_phys.c mzapo_parlcd.c
-SOURCES += font_prop14x16.c font_rom8x16.c
+SOURCES = main.c $(SRC_PATH)/mzapo_phys.c $(SRC_PATH)/mzapo_parlcd.c
+SOURCES += $(SRC_PATH)/font_prop14x16.c $(SRC_PATH)/font_rom8x16.c
 SOURCES += paddle.c ball.c knobs.c game.c LCD_output.c
 
 TARGET_EXE = pingpong
