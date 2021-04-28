@@ -2,9 +2,9 @@
 // will handle colisions
 #include "game.h"
 
-#define UPDATE_RATE 300
+#define UPDATE_RATE 150
 #define INITIAL_BALL_POSITION ((Position){.X = 100, .Y = 100})
-#define INITIAL_BALL_SPEED ((Velocity){.X = 0.2, .Y = 0.1})
+#define INITIAL_BALL_SPEED ((Velocity){.X = 0.1, .Y = 0.05})
 #define INITIAL_BALL_RADIUS 10
 #define INITIAL_PADDLE_LEFT ((Position){.X = 0, .Y = 0})
 #define INITIAL_PADDLE_RIGHT ((Position){.X = DISPLAY_WIDTH - PADDLE_WIDTH, .Y = 0})
@@ -26,6 +26,7 @@ int level;
 unsigned short *frame_buff;
 
 pthread_cond_t input_condvar;
+pthread_cond_t output_condvar;
 pthread_mutex_t mtx;
 
 struct shared {
@@ -175,6 +176,7 @@ void game_loop()
                 quit = shared_data.quit;
                 pause_menu_selected = shared_data.pause_menu_selected;
             pthread_mutex_unlock(&mtx);
+            pthread_cond_broadcast(&output_condvar);
             int r = usleep(UPDATE_RATE);
             if(r) printf("usleep error\n");
         }
@@ -330,8 +332,12 @@ void *lcd_output()
     // update pause menu if in menu state
     while(!quit){
         pthread_mutex_lock(&mtx);
-            pause = shared_data.pause;
             quit = shared_data.quit;
+            if(!quit){
+                pthread_cond_wait(&output_condvar, &mtx);
+                quit = shared_data.quit;
+            }
+            pause = shared_data.pause;
             pause_menu_selected = shared_data.pause_menu_selected;
             ball_pos = ball->pos;
             radius = ball->radius;
