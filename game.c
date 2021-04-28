@@ -7,8 +7,10 @@
 #define INITIAL_BALL_SPEED ((Velocity){.X = 0.2, .Y = 0.1})
 #define INITIAL_BALL_RADIUS 10
 #define INITIAL_PADDLE_LEFT ((Position){.X = 0, .Y = 0})
-#define INITIAL_PADDLE_RIGHT ((Position){.X = DISPLAY_WIDTH - PADDLE_WIDTH, .Y = 150})
-
+#define INITIAL_PADDLE_RIGHT ((Position){.X = DISPLAY_WIDTH - PADDLE_WIDTH, .Y = 0})
+#define COUNTDOWN_X 115
+#define COUNTDOWN_Y 105
+#define COUNTDOWN_SCALE 5
 
 void *terminal_listening();
 void *knobs_listening();
@@ -83,7 +85,7 @@ void start_game(unsigned short *fb, int lev)
     init_shared_data();
     printf("Selected level %d\n", lev);
     set_display_black(fb);
-    countdown(115, 105, 5, fb);
+    countdown(COUNTDOWN_X, COUNTDOWN_Y, COUNTDOWN_SCALE, fb);
 
     // threads
     enum { INPUT_TERMINAL, INPUT_KNOBS, OUTPUT_LCD, OUTPUT_LED, NUM_THREADS };
@@ -264,6 +266,10 @@ void *knobs_listening()
     int move_right = shared_data.move_right;
     int move_left = shared_data.move_right;
     pthread_mutex_unlock(&mtx);
+
+    // remove this line
+    quit = true;
+
     char c;
     while (!quit) {
         // enter knobs listening
