@@ -1,6 +1,13 @@
 // file for handling game objects
 // will handle colisions
 #include "game.h"
+#define UPDATE_RATE 500
+#define INITIAL_BALL_POSITION ((Position){.X = 100, .Y = 100})
+#define INITIAL_BALL_SPEED ((Velocity){.X = 0.5, .Y = 0.5})
+#define INITIAL_BALL_RADIUS 10
+#define INITIAL_PADDLE_LEFT ((Position){.X = 0, .Y = 0})
+#define INITIAL_PADDLE_RIGHT ((Position){.X = DISPLAY_WIDTH - PADDLE_WIDTH, .Y = 0})
+
 
 void *terminal_listening();
 void *knobs_listening();
@@ -16,7 +23,6 @@ int level;
 unsigned short *frame_buff;
 
 pthread_cond_t input_condvar;
-pthread_cond_t output_condvar;
 pthread_mutex_t mtx;
 
 struct shared {
@@ -56,11 +62,11 @@ void init_shared_data()
         call_stty(1);
         exit(EXIT_FAILURE);
     }
-    Position ball_pos = (Position){.X = 100, .Y = 100};
-    Velocity ball_vel = (Velocity){.X = 0.5, .Y = 0.5};
-    Position pad_l_pos = (Position){.X = 0, .Y = 0};
-    Position pad_r_pos = (Position){.X = DISPLAY_WIDTH - PADDLE_WIDTH, .Y = 0};
-    init_ball(ball, ball_pos, ball_vel, WHITE, 10);
+    Position ball_pos = INITIAL_BALL_POSITION;
+    Velocity ball_vel = INITIAL_BALL_SPEED;
+    Position pad_l_pos = INITIAL_PADDLE_LEFT;
+    Position pad_r_pos = INITIAL_PADDLE_RIGHT;
+    init_ball(ball, ball_pos, ball_vel, WHITE, INITIAL_BALL_RADIUS);
     init_paddle(paddle_l, pad_l_pos, RED);
     init_paddle(paddle_r, pad_r_pos, BLUE);
     shared_data.ball = ball;
@@ -167,9 +173,7 @@ void game_loop()
                 quit = shared_data.quit;
                 pause_menu_selected = shared_data.pause_menu_selected;
             pthread_mutex_unlock(&mtx);
-            pthread_cond_broadcast(&output_condvar);
-            unsigned int usecs = 1000;
-            int r = usleep(usecs);
+            int r = usleep(UPDATE_RATE);
             if(r) printf("usleep error\n");
         }
         sleep(1);
@@ -230,7 +234,6 @@ void *terminal_listening()
         pthread_mutex_unlock(&mtx);
         pthread_cond_broadcast(&input_condvar);
     }
-    pthread_cond_broadcast(&output_condvar);
     printf("Terminal thread exiting\n");
     return EXIT_SUCCESS;
 }
