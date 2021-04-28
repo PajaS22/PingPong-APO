@@ -1,6 +1,7 @@
 // file for handling game objects
 // will handle colisions
 #include "game.h"
+
 #define UPDATE_RATE 300
 #define INITIAL_BALL_POSITION ((Position){.X = 100, .Y = 100})
 #define INITIAL_BALL_SPEED ((Velocity){.X = 0.2, .Y = 0.1})
@@ -163,7 +164,7 @@ void game_loop()
     while(!quit){
         bool goal = false;
         while (!goal && !quit) {
-            if (move_ball(ball, paddle_left, paddle_right)){
+            if (!pause && move_ball(ball, paddle_left, paddle_right)){
                 goal = true;
             }
             
@@ -191,6 +192,7 @@ void *terminal_listening()
     int move_left = shared_data.move_right;
     pthread_mutex_unlock(&mtx);
     char c;
+    enum{RESUME, EXIT};
     while (!quit) {
         c = getchar();
         switch (c) {
@@ -214,8 +216,24 @@ void *terminal_listening()
             if (pause && pause_menu_selected < PAUSE_MENU_SELECTION)
                 ++pause_menu_selected;
             break;
+        case 'd':
+            if (pause){
+                switch(pause_menu_selected){
+                    case RESUME:
+                        pthread_mutex_lock(&mtx);
+                        shared_data.pause = false;
+                        pthread_mutex_unlock(&mtx);
+                        break;
+                    case EXIT:
+                        quit = true;
+                        break;
+                }
+            }
+            break;
         case 'p':
-            pause = true;
+            pthread_mutex_lock(&mtx);
+            shared_data.pause = true;
+            pthread_mutex_unlock(&mtx);
             break;
         case 'q':
             quit = true;
@@ -226,7 +244,7 @@ void *terminal_listening()
             shared_data.quit = quit;
         else
             quit = shared_data.quit;
-        shared_data.pause = pause;
+        pause = shared_data.pause;
         shared_data.pause_menu_selected = pause_menu_selected;
         shared_data.move_right = move_right;
         shared_data.move_left = move_left;
@@ -255,7 +273,7 @@ void *knobs_listening()
             shared_data.quit = quit;
         else
             quit = shared_data.quit;
-        shared_data.pause = pause;
+        //shared_data.pause = pause;
         shared_data.move_right = move_right;
         shared_data.move_left = move_left;
         pthread_mutex_unlock(&mtx);
@@ -293,6 +311,7 @@ void *lcd_output()
     Position old__paddle_r_pos = paddle_r_pos;
     int old_paddle_l_length = paddle_l_length;
     int old_paddle_r_length = paddle_r_length;
+    bool last_pause = pause;
     
     update_ball(ball_pos, old__ball_pos, radius, old_radius, ball_color, frame_buff);
     update_paddle(paddle_l_pos, old__paddle_l_pos, paddle_l_width, paddle_l_length, old_paddle_l_length, paddle_l_color, frame_buff);
@@ -316,7 +335,13 @@ void *lcd_output()
             paddle_r_length = paddle_right->height;
         pthread_mutex_unlock(&mtx);
         
-        if(!quit){
+        if(pause == false && last_pause == true){
+            // delete pause menu
+            set_display_black(frame_buff);
+        }
+        last_pause = pause;
+
+        if(!quit){ 
             if (pause) {
                 print_pause_menu(PAUSE_MENU_OFFSET_X, PAUSE_MENU_OFFSET_Y, pause_menu_selected, frame_buff);
             }

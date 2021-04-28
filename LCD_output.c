@@ -194,14 +194,14 @@ void print_menu(int x, int y, int selected, unsigned short *frame_buff){
 }
 
 void print_pause_menu(int x, int y, int selected, unsigned short *frame_buff){
-    char *menu[] = {"Resume", "Exit"};
+    char *menu[] = {"Pause menu", "Resume", "Exit"};
     int menu_num = sizeof(menu) / sizeof(char *);
     int line_padding = 3;
     int ground_padding = 2;
     unsigned short color = WHITE;
     unsigned short color_on_ground = BLACK;
     unsigned short color_background = GREEN;
-    int center_x = -100;
+    int center_x = -30;
 
     int scale = 3;
     for (int i = 0; i < menu_num; ++i) {

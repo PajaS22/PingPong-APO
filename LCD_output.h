@@ -22,7 +22,7 @@
     
 bool display_init();
 bool lcd_initialization(unsigned char **ret_lcd_mem_base);
-void set_display_black();
+void set_display_black(unsigned short *frame_buff);
 void update_display(unsigned short *frame_buff);
 unsigned int hsv2rgb_lcd(int hue, int saturation, int value);
 int char_width(int ch);
