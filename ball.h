@@ -9,13 +9,13 @@
 typedef struct {
     Position pos;
     int radius;
-    Position velocity;
+    Velocity velocity;
     unsigned short color;
 } Ball;
 
-void draw_ball(Position position, int radius, unsigned short color, unsigned short *frame_buff);
-int move_ball(Ball *ball, Paddle *left, Paddle *right);
-void update_ball(unsigned short *frame_buff, Ball old_ball, Ball new_ball);
+void init_ball(Ball *b, Position pos, Velocity velocity, unsigned short color, int radius);
+void draw_ball(Position pos, int radius, unsigned short color, unsigned short *frame_buff);
+void update_ball(Position pos, Position old_pos, int radius, int old_radius, unsigned short color, unsigned short *frame_buff);
 Position new_position(Ball *ball);
 bool paddle_touch(int ball_y, int paddle_y, int paddle_height);
 

@@ -176,15 +176,43 @@ void print_menu(int x, int y, int selected, unsigned short *frame_buff){
     unsigned short color = WHITE;
     unsigned short color_on_ground = BLACK;
     unsigned short color_background = GREEN;
+    int center_x = -50;
 
     int scale = 3;
     for (int i = 0; i < menu_num; ++i) {
+        if(i > 0)
+            center_x = 0;
         if (i == selected + 1)
-            draw_grounded_string(x, y, ground_padding, ground_padding,
+            draw_grounded_string(x + center_x, y, ground_padding, ground_padding,
                                  color_on_ground, color_background, scale,
                                  frame_buff, menu[i]);
         else
-            draw_grounded_string(x, y, ground_padding, ground_padding, color,
+            draw_grounded_string(x + center_x, y, ground_padding, ground_padding, color,
+                                 BACKGROUND_COLOR, scale, frame_buff, menu[i]);
+        y += (fdes->height + line_padding) * scale;
+    }
+}
+
+void print_pause_menu(int x, int y, int selected, unsigned short *frame_buff){
+    char *menu[] = {"Resume", "Exit"};
+    int menu_num = sizeof(menu) / sizeof(char *);
+    int line_padding = 3;
+    int ground_padding = 2;
+    unsigned short color = WHITE;
+    unsigned short color_on_ground = BLACK;
+    unsigned short color_background = GREEN;
+    int center_x = -100;
+
+    int scale = 3;
+    for (int i = 0; i < menu_num; ++i) {
+        if(i > 0)
+            center_x = 0;
+        if (i == selected + 1)
+            draw_grounded_string(x + center_x, y, ground_padding, ground_padding,
+                                 color_on_ground, color_background, scale,
+                                 frame_buff, menu[i]);
+        else
+            draw_grounded_string(x + center_x, y, ground_padding, ground_padding, color,
                                  BACKGROUND_COLOR, scale, frame_buff, menu[i]);
         y += (fdes->height + line_padding) * scale;
     }

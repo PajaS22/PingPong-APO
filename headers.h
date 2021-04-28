@@ -13,8 +13,15 @@
 #include <math.h>
 
 typedef struct{
-    int X;
-    int Y;
+    float X;
+    float Y;
 }Position;
+
+typedef struct{
+    float X;
+    float Y;
+}Velocity;
+
+void call_stty(int reset);
 
 #endif
