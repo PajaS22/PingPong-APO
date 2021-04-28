@@ -9,7 +9,7 @@ void *knobs_listening_main();
 
 
 pthread_cond_t condvar;
-pthread_mutex_t mtx;
+pthread_mutex_t mtx_main;
 
 struct shared {
     bool quit;
@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
             shared_data_main.move = 0;
             bool quit = false;
 
-            pthread_mutex_init(&mtx, NULL);
+            pthread_mutex_init(&mtx_main, NULL);
             pthread_cond_init(&condvar, NULL);
 
             int num_of_threads = 2;
@@ -56,9 +56,9 @@ int main(int argc, char *argv[])
                     } else if (selected < 0) {
                         selected = 0;
                     }
-                    pthread_mutex_lock(&mtx);
+                    pthread_mutex_lock(&mtx_main);
                     shared_data_main.move = 0;
-                    pthread_mutex_unlock(&mtx);
+                    pthread_mutex_unlock(&mtx_main);
 
                     print_menu(MENU_OFFSET_X, MENU_OFFSET_Y, selected, frame_buff);
                     update_display(frame_buff);
@@ -71,18 +71,18 @@ int main(int argc, char *argv[])
                     if(selected + 1 == MENU_SELECTION){
                         printf("exit selected\n");
                         // exit selected
-                        pthread_mutex_lock(&mtx);
+                        pthread_mutex_lock(&mtx_main);
                         shared_data_main.quit = true;
-                        pthread_mutex_unlock(&mtx);
+                        pthread_mutex_unlock(&mtx_main);
                     }
                     else{
                         start_game(frame_buff, selected);
 
                         //game ended
                         start = false;
-                        pthread_mutex_lock(&mtx);
+                        pthread_mutex_lock(&mtx_main);
                         shared_data_main.start = false;
-                        pthread_mutex_unlock(&mtx);
+                        pthread_mutex_unlock(&mtx_main);
                         pthread_create(&thrs[0], NULL, terminal_listening_main, NULL);
                         pthread_create(&thrs[1], NULL, knobs_listening_main, NULL);
 
@@ -90,14 +90,14 @@ int main(int argc, char *argv[])
                         update_display(frame_buff);
                     }
                 }
-                pthread_mutex_lock(&mtx);
+                pthread_mutex_lock(&mtx_main);
                 quit = shared_data_main.quit;
                 if(!start && !quit)
-                    pthread_cond_wait(&condvar, &mtx);
+                    pthread_cond_wait(&condvar, &mtx_main);
                 quit = shared_data_main.quit;
                 start = shared_data_main.start;
                 move = shared_data_main.move;
-                pthread_mutex_unlock(&mtx);
+                pthread_mutex_unlock(&mtx_main);
             }
             fprintf(stderr, "Main finished!\n");
             goodbye(frame_buff);
@@ -115,41 +115,41 @@ int main(int argc, char *argv[])
 
 void *terminal_listening_main() {
     printf("Terminal thread running\n");
-    pthread_mutex_lock(&mtx);
+    pthread_mutex_lock(&mtx_main);
     bool quit = shared_data_main.quit;
     bool start = shared_data_main.start;
-    pthread_mutex_unlock(&mtx);
+    pthread_mutex_unlock(&mtx_main);
     char c;
     while (!quit && !start) {
         c = getchar();
         switch (c) {
         case 'w':
-            pthread_mutex_lock(&mtx);
+            pthread_mutex_lock(&mtx_main);
             shared_data_main.move = -1; // move up in the menu
-            pthread_mutex_unlock(&mtx);
+            pthread_mutex_unlock(&mtx_main);
             break;
         case 's':
-            pthread_mutex_lock(&mtx);
+            pthread_mutex_lock(&mtx_main);
             shared_data_main.move = 1; // move down in the menu
-            pthread_mutex_unlock(&mtx);
+            pthread_mutex_unlock(&mtx_main);
             break;
         case 'd':
-            pthread_mutex_lock(&mtx);
+            pthread_mutex_lock(&mtx_main);
             shared_data_main.start = true;
-            pthread_mutex_unlock(&mtx);
+            pthread_mutex_unlock(&mtx_main);
             break;
         case 'q':
             quit = true;
             break;
         }
-        pthread_mutex_lock(&mtx);
+        pthread_mutex_lock(&mtx_main);
         if (quit)
             shared_data_main.quit = quit;
         else
             quit = shared_data_main.quit;
         start = shared_data_main.start;
         pthread_cond_broadcast(&condvar);
-        pthread_mutex_unlock(&mtx);
+        pthread_mutex_unlock(&mtx_main);
     }
     printf("Terminal thread exiting\n");
     return EXIT_SUCCESS;
@@ -157,12 +157,12 @@ void *terminal_listening_main() {
 
 void *knobs_listening_main() {
     printf("Knobs thread running\n");
-    pthread_mutex_lock(&mtx);
+    pthread_mutex_lock(&mtx_main);
     bool quit = shared_data_main.quit;
     bool start = shared_data_main.start;
-    pthread_mutex_unlock(&mtx);
+    pthread_mutex_unlock(&mtx_main);
     while (!quit && !start) { // get input from knobs
-        pthread_mutex_lock(&mtx);
+        pthread_mutex_lock(&mtx_main);
         if (quit)
             shared_data_main.quit = quit;
         else
@@ -172,7 +172,7 @@ void *knobs_listening_main() {
         else
             start = shared_data_main.start;
         // pthread_cond_broadcast(&condvar);
-        pthread_mutex_unlock(&mtx);
+        pthread_mutex_unlock(&mtx_main);
     }
     printf("Knobs thread exiting\n");
     return EXIT_SUCCESS;
