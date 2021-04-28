@@ -139,7 +139,6 @@ int move_ball(Ball *ball, Paddle *left, Paddle *right){
             ret = -1;
         }
     }
-
     pthread_mutex_lock(&mtx);
     ball->pos = new_pos;
     ball->velocity = velocity;
