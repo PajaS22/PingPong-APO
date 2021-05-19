@@ -4,6 +4,9 @@
 #include "LCD_output.h"
 #include "game.h"
 #include "knobs.h"
+#include "keyboard.h"
+
+#define KEYBOARD_TIMEOUT 100
 
 void *terminal_listening_main();
 void *knobs_listening_main();
@@ -121,28 +124,35 @@ void *terminal_listening_main() {
     bool start = shared_data_main.start;
     pthread_mutex_unlock(&mtx_main);
     char c;
+    int r;
     while (!quit && !start) {
-        c = getchar();
-        switch (c) {
-        case 'w':
-            pthread_mutex_lock(&mtx_main);
-            shared_data_main.move = -1; // move up in the menu
-            pthread_mutex_unlock(&mtx_main);
-            break;
-        case 's':
-            pthread_mutex_lock(&mtx_main);
-            shared_data_main.move = 1; // move down in the menu
-            pthread_mutex_unlock(&mtx_main);
-            break;
-        case 'd':
-            pthread_mutex_lock(&mtx_main);
-            shared_data_main.start = true;
-            pthread_mutex_unlock(&mtx_main);
-            break;
-        case 'q':
+        r = keyboard_getc_timeout(KEYBOARD_TIMEOUT, &c);
+        if(r > 0){ // something has read
+            switch(c) {
+            case 'w':
+                pthread_mutex_lock(&mtx_main);
+                shared_data_main.move = -1; // move up in the menu
+                pthread_mutex_unlock(&mtx_main);
+                break;
+            case 's':
+                pthread_mutex_lock(&mtx_main);
+                shared_data_main.move = 1; // move down in the menu
+                pthread_mutex_unlock(&mtx_main);
+                break;
+            case 'd':
+                pthread_mutex_lock(&mtx_main);
+                shared_data_main.start = true;
+                pthread_mutex_unlock(&mtx_main);
+                break;
+            case 'q':
+                quit = true;
+                break;
+            }
+        } else if(r < 0){ // error
+            fprintf(stderr, "ERROR: Keyboard reading error");
             quit = true;
-            break;
         }
+        
         pthread_mutex_lock(&mtx_main);
         if (quit)
             shared_data_main.quit = quit;
@@ -161,6 +171,7 @@ void *knobs_listening_main() {
     pthread_mutex_lock(&mtx_main);
     bool quit = shared_data_main.quit;
     bool start = shared_data_main.start;
+    int move_dir;
     knobs_data kd;
     
     pthread_mutex_unlock(&mtx_main);
@@ -168,10 +179,29 @@ void *knobs_listening_main() {
         kd = get_rel_knob_value();
         
 
-        printf("RGB: %d %d %d\n", kd.rk, kd.gk, kd.bk);
-        printf("RGB butts: %d %d %d\n", kd.rb, kd.gb, kd.bb);
+        // printf("RGB: %d %d %d\n", kd.rk, kd.gk, kd.bk);
+        // printf("RGB butts: %d %d %d\n", kd.rb, kd.gb, kd.bb);
         
-        sleep(1);
+        if (kd.gk >= 1)
+            move_dir = 1;
+        else if (kd.gk <= -1)
+            move_dir = -1;
+        else 
+            move_dir = 0;
+
+        if (move_dir) {
+            pthread_mutex_lock(&mtx_main);
+            shared_data_main.move = move_dir;
+            pthread_mutex_unlock(&mtx_main);
+        }
+        if (kd.gb) {
+            pthread_mutex_lock(&mtx_main);
+            shared_data_main.start = true;
+            pthread_mutex_unlock(&mtx_main);
+        }
+        
+
+        //sleep(1);
 
         pthread_mutex_lock(&mtx_main);
         if (quit)
@@ -182,7 +212,7 @@ void *knobs_listening_main() {
             shared_data_main.start = start;
         else
             start = shared_data_main.start;
-        // pthread_cond_broadcast(&condvar);
+        pthread_cond_broadcast(&condvar);
         pthread_mutex_unlock(&mtx_main);
     }
     printf("Knobs thread exiting\n");

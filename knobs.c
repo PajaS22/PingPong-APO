@@ -3,6 +3,7 @@
 #include "mzapo_regs.h"
 
 #define HALF_KNOB 127
+#define MOVE_KNOB 6
 
 static unsigned char *mem_base;
 
@@ -31,14 +32,14 @@ knobs_data get_rel_knob_value() {
     ret.rk = circle_value(actual_kd.rk - rk);
     ret.gk = circle_value(actual_kd.gk - gk);
     ret.bk = circle_value(actual_kd.bk - bk);
-
+    
+    (abs(ret.rk) > MOVE_KNOB) ? (rk = actual_kd.rk) : (ret.rk = 0);
+    (abs(ret.gk) > MOVE_KNOB) ? (gk = actual_kd.gk) : (ret.gk = 0);
+    (abs(ret.bk) > MOVE_KNOB) ? (bk = actual_kd.bk) : (ret.bk = 0);
+    
     ret.rb = actual_kd.rb;
     ret.gb = actual_kd.gb;
     ret.bb = actual_kd.bb;
-
-    rk = actual_kd.rk;
-    gk = actual_kd.gk;
-    bk = actual_kd.bk; 
     
     return ret;
 }
