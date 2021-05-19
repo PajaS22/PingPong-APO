@@ -1,4 +1,5 @@
 #define _POSIX_C_SOURCE 200112L
+#define _XOPEN_SOURCE 500
 
 #include "headers.h"
 #include "LCD_output.h"
@@ -6,11 +7,11 @@
 #include "knobs.h"
 #include "keyboard.h"
 
+
 #define KEYBOARD_TIMEOUT 100
 
 void *terminal_listening_main();
-void *knobs_listening_main();
-
+void *knobs_listening_main();   
 
 pthread_cond_t condvar;
 pthread_mutex_t mtx_main;
@@ -123,11 +124,11 @@ void *terminal_listening_main() {
     bool quit = shared_data_main.quit;
     bool start = shared_data_main.start;
     pthread_mutex_unlock(&mtx_main);
-    char c;
+    unsigned char c;
     int r;
     while (!quit && !start) {
         r = keyboard_getc_timeout(KEYBOARD_TIMEOUT, &c);
-        if(r > 0){ // something has read
+        if(r > 0){ // something has been read
             switch(c) {
             case 'w':
                 pthread_mutex_lock(&mtx_main);
@@ -200,8 +201,15 @@ void *knobs_listening_main() {
             pthread_mutex_unlock(&mtx_main);
         }
         
+        /*struct timespec spec1, spec2;
+        spec1.tv_nsec = 100;
 
-        //sleep(1);
+        spec2.tv_nsec = 200;
+
+        nanosleep(&spec1, &spec2);
+        */
+       
+        usleep(1000);
 
         pthread_mutex_lock(&mtx_main);
         if (quit)

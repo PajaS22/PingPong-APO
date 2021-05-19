@@ -1,5 +1,9 @@
 #include "keyboard.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
 #include <poll.h>
+#include <pthread.h>
 
 int keyboard_getc_timeout(int timeout_ms, unsigned char *c)
 {

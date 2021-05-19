@@ -9,11 +9,11 @@ CXXFLAGS = -g -std=gnu++11 -O1 -Wall
 LDFLAGS = -L
 LDLIBS = -lrt -lpthread -lm
 
-#SOURCES = main.c $(SRC_PATH)/mzapo_phys.c $(SRC_PATH)/mzapo_parlcd.c
-SOURCES = main.c mzapo_phys.c mzapo_parlcd.c
-#SOURCES += $(SRC_PATH)/font_prop14x16.c $(SRC_PATH)/font_rom8x16.c $(SRC_PATH)/font_types.h
-SOURCES += font_prop14x16.c font_rom8x16.c font_types.h
-SOURCES += paddle.c ball.c knobs.c game.c LCD_output.c
+SOURCES = main.c $(SRC_PATH)/mzapo_phys.c $(SRC_PATH)/mzapo_parlcd.c
+#SOURCES = main.c mzapo_phys.c mzapo_parlcd.c
+SOURCES += $(SRC_PATH)/font_prop14x16.c $(SRC_PATH)/font_rom8x16.c $(SRC_PATH)/font_types.h
+#SOURCES += font_prop14x16.c font_rom8x16.c font_types.h
+SOURCES += paddle.c ball.c knobs.c game.c LCD_output.c keyboard.c
 
 TARGET_EXE = pingpong
 
@@ -47,10 +47,10 @@ LDFLAGS += $(CXXFLAGS) $(CPPFLAGS)
 endif
 
 %.o:%.c
-	$(CC) $(CFLAGS) $(CPPFLAGS) -c $<
+	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
 
 %.o:%.cpp
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $<
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -o $@ -c $<
 
 all: $(TARGET_EXE)
 
