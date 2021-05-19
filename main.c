@@ -162,9 +162,11 @@ void *knobs_listening_main() {
     bool quit = shared_data_main.quit;
     bool start = shared_data_main.start;
     knobs_data kd;
+    
     pthread_mutex_unlock(&mtx_main);
     while (!quit && !start) { // get input from knobs
-        kd = knobs_value();
+        kd = get_rel_knob_value();
+        
 
         printf("RGB: %d %d %d\n", kd.rk, kd.gk, kd.bk);
         printf("RGB butts: %d %d %d\n", kd.rb, kd.gb, kd.bb);
