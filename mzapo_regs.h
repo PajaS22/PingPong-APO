@@ -1,4 +1,4 @@
-/*******************************************************************
+ /*******************************************************************
   Simple program to check LCD functionality on MicroZed
   based MZ_APO board designed by Petr Porazil at PiKRON
 
@@ -35,8 +35,8 @@
 #define SPILED_REG_LED_LINE_o           0x004
 #define SPILED_REG_LED_RGB1_o           0x010
 #define SPILED_REG_LED_RGB2_o           0x014
-#define SPILED_REG_LED_KBDWR_DIRECT_o   0x018
 
+#define SPILED_REG_LED_KBDWR_DIRECT_o   0x018
 #define SPILED_REG_KBDRD_KNOBS_DIRECT_o 0x020
 #define SPILED_REG_KNOBS_8BIT_o         0x024
 
@@ -46,7 +46,7 @@
 #define PARLCD_REG_SIZE       0x00004000
 
 #define PARLCD_REG_CR_o                 0x0000
-#define PARLCD_REG_CR_RESET_m                  0x00000002
+#define PARLCD_REG_CR_RESET_m           0x00000002
 #define PARLCD_REG_CMD_o                0x0008
 #define PARLCD_REG_DATA_o               0x000C
 

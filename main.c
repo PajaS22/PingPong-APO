@@ -3,6 +3,7 @@
 #include "headers.h"
 #include "LCD_output.h"
 #include "game.h"
+#include "knobs.h"
 
 void *terminal_listening_main();
 void *knobs_listening_main();
@@ -19,7 +20,7 @@ struct shared {
 
 int main(int argc, char *argv[])
 {
-    if (display_init()) {
+    if (display_init() && knobs_init()) {
         unsigned short *frame_buff = (unsigned short *)malloc(DISPLAY_HEIGHT * DISPLAY_WIDTH *
                                               sizeof(unsigned short));
         if (frame_buff == NULL) {
@@ -160,8 +161,16 @@ void *knobs_listening_main() {
     pthread_mutex_lock(&mtx_main);
     bool quit = shared_data_main.quit;
     bool start = shared_data_main.start;
+    knobs_data kd;
     pthread_mutex_unlock(&mtx_main);
     while (!quit && !start) { // get input from knobs
+        kd = knobs_value();
+
+        printf("RGB: %d %d %d\n", kd.rk, kd.gk, kd.bk);
+        printf("RGB butts: %d %d %d\n", kd.rb, kd.gb, kd.bb);
+        
+        sleep(1);
+
         pthread_mutex_lock(&mtx_main);
         if (quit)
             shared_data_main.quit = quit;
