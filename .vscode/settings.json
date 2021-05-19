@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "mzapo_parlcd.h": "c"
+        "mzapo_parlcd.h": "c",
+        "*.tcc": "c"
     }
 }

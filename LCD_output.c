@@ -37,7 +37,7 @@ void set_display_black(unsigned short *frame_buff){
 }
 
 void update_display(unsigned short *frame_buff){
-    parlcd_write_cmd(lcd_mem_base, CLEAN_CODE);
+    // parlcd_write_cmd(lcd_mem_base, CLEAN_CODE);
     for (int ptr = 0; ptr < DISPLAY_WIDTH * DISPLAY_HEIGHT; ++ptr) {
         parlcd_write_data(lcd_mem_base, frame_buff[ptr]);
     }

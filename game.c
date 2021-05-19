@@ -1,13 +1,16 @@
 // file for handling game objects
 // will handle colisions
 #include "game.h"
+#include "headers.h"
+#include "keyboard.h"
+#include "knobs.h"
 
 #define UPDATE_RATE 150
 #define INITIAL_BALL_POSITION ((Position){.X = 100, .Y = 100})
 #define INITIAL_BALL_SPEED ((Velocity){.X = 0.1, .Y = 0.05})
 #define INITIAL_BALL_RADIUS 10
-#define INITIAL_PADDLE_LEFT ((Position){.X = 0, .Y = 0})
-#define INITIAL_PADDLE_RIGHT ((Position){.X = DISPLAY_WIDTH - PADDLE_WIDTH, .Y = 0})
+#define INITIAL_PADDLE_LEFT ((Position){.X = 0, .Y = DISPLAY_HEIGHT / 2 - PADDLE_LENGTH / 2 })
+#define INITIAL_PADDLE_RIGHT ((Position){.X = DISPLAY_WIDTH - PADDLE_WIDTH, .Y = DISPLAY_HEIGHT / 2 - PADDLE_LENGTH / 2})
 #define COUNTDOWN_X 115
 #define COUNTDOWN_Y 105
 #define COUNTDOWN_SCALE 5
@@ -24,14 +27,17 @@ int move_ball(Ball *ball, Paddle *left, Paddle *right);
 
 int level;
 unsigned short *frame_buff;
+enum{RESUME, EXIT};
 
 pthread_cond_t input_condvar;
 pthread_cond_t output_condvar;
 pthread_mutex_t mtx;
 
+
 struct shared {
     bool quit;
     bool pause;
+    bool redraw;
     int move_left;
     int move_right;
     int pause_menu_selected;
@@ -47,6 +53,7 @@ void init_shared_data()
 {
     shared_data.quit = false;
     shared_data.pause = false;
+    shared_data.redraw = true;
     shared_data.pause_menu_selected = 0;
     shared_data.move_left = 0;
     shared_data.move_right = 0;
@@ -66,27 +73,52 @@ void init_shared_data()
         call_stty(1);
         exit(EXIT_FAILURE);
     }
-    Position ball_pos = INITIAL_BALL_POSITION;
-    Velocity ball_vel = INITIAL_BALL_SPEED;
-    Position pad_l_pos = INITIAL_PADDLE_LEFT;
-    Position pad_r_pos = INITIAL_PADDLE_RIGHT;
-    init_ball(ball, ball_pos, ball_vel, WHITE, INITIAL_BALL_RADIUS);
-    init_paddle(paddle_l, pad_l_pos, RED);
-    init_paddle(paddle_r, pad_r_pos, BLUE);
+    init_ball(ball, INITIAL_BALL_POSITION, INITIAL_BALL_SPEED, WHITE, INITIAL_BALL_RADIUS);
+    init_paddle(paddle_l, INITIAL_PADDLE_LEFT, RED);
+    init_paddle(paddle_r, INITIAL_PADDLE_RIGHT, BLUE);
     shared_data.ball = ball;
     shared_data.paddle_left = paddle_l;
     shared_data.paddle_right = paddle_r;
 }
 
+void new_round() {
+    // countdown
+    pthread_mutex_lock(&mtx);
+    shared_data.redraw = false;
+    pthread_mutex_unlock(&mtx);
+    
+    init_ball(shared_data.ball, INITIAL_BALL_POSITION, INITIAL_BALL_SPEED, WHITE, INITIAL_BALL_RADIUS);
+    init_paddle(shared_data.paddle_left, INITIAL_PADDLE_LEFT, RED);
+    init_paddle(shared_data.paddle_right, INITIAL_PADDLE_RIGHT, BLUE);
+
+
+    pthread_mutex_lock(&mtx);
+    shared_data.redraw = true;
+    pthread_mutex_unlock(&mtx);
+    pthread_cond_broadcast(&output_condvar);
+
+    
+    // show paddles and ball
+    // show_paddle(shared_data.paddle_left, frame_buff);
+    // show_paddle(shared_data.paddle_right, frame_buff);
+    // update_display(frame_buff);
+
+
+
+    set_display_black(frame_buff);
+    countdown(COUNTDOWN_X, COUNTDOWN_Y, COUNTDOWN_SCALE, frame_buff);
+    // shared date set to default
+}
+
 void start_game(unsigned short *fb, int lev)
 {
-    level = lev;
     frame_buff = fb;
+    level = lev;
 
     init_shared_data();
     printf("Selected level %d\n", lev);
-    set_display_black(fb);
-    countdown(COUNTDOWN_X, COUNTDOWN_Y, COUNTDOWN_SCALE, fb);
+    
+    
 
     // threads
     enum { INPUT_TERMINAL, INPUT_KNOBS, OUTPUT_LCD, OUTPUT_LED, NUM_THREADS };
@@ -164,12 +196,15 @@ void game_loop()
     pthread_mutex_unlock(&mtx);
 
 
+    bool goal = false;
     while(!quit){
-        bool goal = false;
+        goal = false;
+
+        new_round();
+
         while (!goal && !quit) {
-            if (!pause && move_ball(ball, paddle_left, paddle_right)){
+            if (!pause && move_ball(ball, paddle_left, paddle_right))
                 goal = true;
-            }
             
             pthread_mutex_lock(&mtx);
                 pause = shared_data.pause;
@@ -177,10 +212,8 @@ void game_loop()
                 pause_menu_selected = shared_data.pause_menu_selected;
             pthread_mutex_unlock(&mtx);
             pthread_cond_broadcast(&output_condvar);
-            int r = usleep(UPDATE_RATE);
-            if(r) printf("usleep error\n");
+            usleep(1000);
         }
-        sleep(1);
     }
 }
 
@@ -195,61 +228,75 @@ void *terminal_listening()
     int move_right = shared_data.move_right;
     int move_left = shared_data.move_right;
     pthread_mutex_unlock(&mtx);
-    char c;
-    enum{RESUME, EXIT};
+    bool pause_menu_selected_changed;
+    unsigned char c;
+    int r;
+    
     while (!quit) {
-        c = getchar();
-        switch (c) {
-        case 'r':
-            move_left = -1;
-            break;
-        case 'f':
-            move_left = 1;
-            break;
-        case 'i':
-            move_right = -1;
-            break;
-        case 'k':
-            move_right = 1;
-            break;
-        case 'w':
-            if (pause && pause_menu_selected > 0)
-                --pause_menu_selected;
-            break;
-        case 's':
-            if (pause && pause_menu_selected < PAUSE_MENU_SELECTION)
-                ++pause_menu_selected;
-            break;
-        case 'd':
-            if (pause){
-                switch(pause_menu_selected){
-                    case RESUME:
-                        pthread_mutex_lock(&mtx);
-                        shared_data.pause = false;
-                        pthread_mutex_unlock(&mtx);
-                        break;
-                    case EXIT:
-                        quit = true;
-                        break;
-                }
-            }
-            break;
-        case 'p':
-            pthread_mutex_lock(&mtx);
-            shared_data.pause = true;
-            pthread_mutex_unlock(&mtx);
-            break;
-        case 'q':
+        r = keyboard_getc_timeout(&c);
+        pause_menu_selected_changed = false;
+        if(r > 0){
+            switch (c) {
+                case 'r':
+                    move_left = -1;
+                    break;
+                case 'f':
+                    move_left = 1;
+                    break;
+                case 'i':
+                    move_right = -1;
+                    break;
+                case 'k':
+                    move_right = 1;
+                    break;
+                case 'w':
+                    if (pause && pause_menu_selected > 0)
+                        --pause_menu_selected;
+                        pause_menu_selected_changed = true;
+                    break;
+                case 's':
+                    if (pause && pause_menu_selected < PAUSE_MENU_SELECTION)
+                        ++pause_menu_selected;
+                        pause_menu_selected_changed = true;
+                    break;
+                case 'd':
+                    if (pause){
+                        switch(pause_menu_selected){
+                            case RESUME:
+                                pthread_mutex_lock(&mtx);
+                                shared_data.pause = false;
+                                pthread_mutex_unlock(&mtx);
+                                break;
+                            case EXIT:
+                                quit = true;
+                                break;
+                        }
+                    }
+                    break;
+                case 'p':
+                    pthread_mutex_lock(&mtx);
+                    shared_data.pause = true;
+                    pthread_mutex_unlock(&mtx);
+                    break;
+                case 'q':
+                    quit = true;
+                    break;
+            }//end switch
+        } else if (r < 0){
+            fprintf(stderr, "ERROR: Keyboard reading error");
             quit = true;
-            break;
         }
+        
         pthread_mutex_lock(&mtx);
         if (quit)
             shared_data.quit = quit;
         else
             quit = shared_data.quit;
         pause = shared_data.pause;
-        shared_data.pause_menu_selected = pause_menu_selected;
+        if(pause_menu_selected_changed)
+            shared_data.pause_menu_selected = pause_menu_selected;
+        else
+            pause_menu_selected = shared_data.pause_menu_selected;
         shared_data.move_right = move_right;
         shared_data.move_left = move_left;
         pthread_mutex_unlock(&mtx);
@@ -267,25 +314,60 @@ void *knobs_listening()
     bool pause = shared_data.pause;
     int move_right = shared_data.move_right;
     int move_left = shared_data.move_right;
+    int pause_menu_selected = shared_data.pause_menu_selected;
     pthread_mutex_unlock(&mtx);
-
-    // remove this line
-    quit = true;
-
+    bool pause_menu_selected_changed = false;
+    knobs_data kd;
     char c;
     while (!quit) {
         // enter knobs listening
+        kd = get_rel_knob_value();
+        pause_menu_selected_changed = false;
+        if (kd.gb){
+            usleep(DEBOUNCE_GREEN_KNOB);
+            if (pause){
+                switch(pause_menu_selected){
+                    case RESUME:
+                        pthread_mutex_lock(&mtx);
+                        shared_data.pause = false;
+                        pthread_mutex_unlock(&mtx);
+                        pause = false;
+                        break;
+                    case EXIT:
+                        quit = true;
+                        break;
+                }
+            }
+            else{
+                pause = true;
+            }
+        }
+        if(kd.gk < 0 && pause_menu_selected > 0){
+            --pause_menu_selected;
+            pause_menu_selected_changed = true;
+        } else if (kd.gk > 0 && pause_menu_selected < PAUSE_MENU_SELECTION) {
+            ++pause_menu_selected;
+            pause_menu_selected_changed = true;
+        }
+        
+        if(pause || pause_menu_selected_changed)
+            pthread_cond_broadcast(&input_condvar);
 
         pthread_mutex_lock(&mtx);
         if (quit)
             shared_data.quit = quit;
         else
             quit = shared_data.quit;
-        //shared_data.pause = pause;
+        shared_data.pause = pause || shared_data.pause;
+
+        if(pause_menu_selected_changed)
+            shared_data.pause_menu_selected = pause_menu_selected;
+        else
+            pause_menu_selected = shared_data.pause_menu_selected;
+            
         shared_data.move_right = move_right;
         shared_data.move_left = move_left;
         pthread_mutex_unlock(&mtx);
-        // pthread_cond_broadcast(&condvar);
     }
     printf("Knobs thread exiting\n");
     return EXIT_SUCCESS;
@@ -311,6 +393,7 @@ void *lcd_output()
         int paddle_r_width = paddle_right->width;
         int paddle_l_length = paddle_left->height;
         int paddle_r_length = paddle_right->height;
+        bool redraw = shared_data.redraw;
     pthread_mutex_unlock(&mtx);
 
     Position old__ball_pos = ball_pos;
@@ -321,11 +404,11 @@ void *lcd_output()
     int old_paddle_r_length = paddle_r_length;
     bool last_pause = pause;
     
+    
     update_ball(ball_pos, old__ball_pos, radius, old_radius, ball_color, frame_buff);
     update_paddle(paddle_l_pos, old__paddle_l_pos, paddle_l_width, paddle_l_length, old_paddle_l_length, paddle_l_color, frame_buff);
     update_paddle(paddle_r_pos, old__paddle_r_pos, paddle_r_width, paddle_r_length, old_paddle_r_length, paddle_r_color, frame_buff);
     update_display(frame_buff);
-
 
     // update ball
     // update paddles
@@ -345,19 +428,21 @@ void *lcd_output()
             paddle_r_width = paddle_right->width;
             paddle_l_length = paddle_left->height;
             paddle_r_length = paddle_right->height;
+            redraw = shared_data.redraw;
         pthread_mutex_unlock(&mtx);
         
-        if(pause == false && last_pause == true){
+        if(!pause && last_pause && redraw){
             // delete pause menu
             set_display_black(frame_buff);
         }
         last_pause = pause;
 
-        if(!quit){ 
+        if(!quit && redraw){
             if (pause) {
                 print_pause_menu(PAUSE_MENU_OFFSET_X, PAUSE_MENU_OFFSET_Y, pause_menu_selected, frame_buff);
             }
             else{
+                
                 update_ball(ball_pos, old__ball_pos, radius, old_radius, ball_color, frame_buff);
                 update_paddle(paddle_l_pos, old__paddle_l_pos, paddle_l_width, paddle_l_length, old_paddle_l_length, paddle_l_color, frame_buff);
                 update_paddle(paddle_r_pos, old__paddle_r_pos, paddle_r_width, paddle_r_length, old_paddle_r_length, paddle_r_color, frame_buff);

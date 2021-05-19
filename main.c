@@ -1,14 +1,11 @@
-#define _POSIX_C_SOURCE 200112L
-#define _XOPEN_SOURCE 500
-
 #include "headers.h"
 #include "LCD_output.h"
 #include "game.h"
 #include "knobs.h"
 #include "keyboard.h"
 
-
-#define KEYBOARD_TIMEOUT 100
+#define _POSIX_C_SOURCE 200112L
+#define _XOPEN_SOURCE 500
 
 void *terminal_listening_main();
 void *knobs_listening_main();   
@@ -74,7 +71,7 @@ int main(int argc, char *argv[])
                     }
                     printf("All threads joined, starting game\n");
                     if(selected + 1 == MENU_SELECTION){
-                        printf("exit selected\n");
+                        printf("Exit selected\n");
                         // exit selected
                         pthread_mutex_lock(&mtx_main);
                         shared_data_main.quit = true;
@@ -127,8 +124,8 @@ void *terminal_listening_main() {
     unsigned char c;
     int r;
     while (!quit && !start) {
-        r = keyboard_getc_timeout(KEYBOARD_TIMEOUT, &c);
-        if(r > 0){ // something has been read
+        r = keyboard_getc_timeout(&c);
+        if (r > 0) { // something has been read
             switch(c) {
             case 'w':
                 pthread_mutex_lock(&mtx_main);
@@ -149,7 +146,7 @@ void *terminal_listening_main() {
                 quit = true;
                 break;
             }
-        } else if(r < 0){ // error
+        } else if (r < 0) { // error
             fprintf(stderr, "ERROR: Keyboard reading error");
             quit = true;
         }
@@ -200,16 +197,8 @@ void *knobs_listening_main() {
             shared_data_main.start = true;
             pthread_mutex_unlock(&mtx_main);
         }
-        
-        /*struct timespec spec1, spec2;
-        spec1.tv_nsec = 100;
 
-        spec2.tv_nsec = 200;
-
-        nanosleep(&spec1, &spec2);
-        */
-       
-        usleep(1000);
+        usleep(DEBOUNCE_GREEN_KNOB);
 
         pthread_mutex_lock(&mtx_main);
         if (quit)
