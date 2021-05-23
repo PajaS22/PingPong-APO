@@ -92,6 +92,9 @@ struct shared {
     } paddle_move;
     int congrats;
     bool countdown;
+    struct{
+        bool left, right;
+    }knob_activate;
 } shared_data;
 
 void init_shared_data()
@@ -102,6 +105,8 @@ void init_shared_data()
     shared_data.pause_menu_selected = 0;
     shared_data.led1.state = false;
     shared_data.led2.state = false;
+    shared_data.knob_activate.left = false;
+    shared_data.knob_activate.right = false;
     acceleration = (level == NORMAL_LEVEL ? EASY_ACCELERATION : HARD_ACCELERATION);
     Ball *ball = malloc(sizeof(Ball));
     Paddle *paddle_l = malloc(sizeof(Paddle));
@@ -242,6 +247,8 @@ void game_loop()
     bool quit = shared_data.quit;
     int congrats = shared_data.congrats;
     bool is_countdown = shared_data.countdown;
+    bool knob_activate_left = shared_data.knob_activate.left;
+    bool knob_activate_right = shared_data.knob_activate.right;
     pthread_mutex_unlock(&mtx);
     int t_spawn_bonus = 0; // time
     int t_paddle_restore_left = 0;
@@ -300,15 +307,23 @@ void game_loop()
                         case ENLARGE_BONUS:
                             if (last_hit == LEFT_PLAYER)
                                 enlarge_ability_left = true;
-                                //enlarge_paddle(paddle_left);
                             else if (last_hit == RIGHT_PLAYER) 
-                            ena
-                                //enlarge_paddle(paddle_right);
+                                enlarge_ability_right = true;
                             break;
                     }
                     shared_data.delete_bonus.bonus = remove_bonus(shared_data.bonuses.arr, idx_hit, shared_data.bonuses.i);
                     shared_data.delete_bonus.delete = true;
                     shared_data.bonuses.i--;
+                }
+                if(knob_activate_left && enlarge_ability_left){ // enlarge left paddle
+                    enlarge_ability_left = false;
+                    t_paddle_restore_left = RESTORE_TIME / GAMELOOP_SLEEP;
+                    enlarge_paddle(paddle_left);
+                }
+                if(knob_activate_right && enlarge_ability_right){ // enlarge left paddle
+                    enlarge_ability_right = false;
+                    t_paddle_restore_right = RESTORE_TIME / GAMELOOP_SLEEP;
+                    enlarge_paddle(paddle_right);
                 }
                 pthread_mutex_unlock(&mtx);
                 if (++t_spawn_bonus == SPAWN_TIME / GAMELOOP_SLEEP) { // add bonus
@@ -321,12 +336,12 @@ void game_loop()
                     }
                     pthread_mutex_unlock(&mtx);
                 }
-                if (--t_paddle_restore_left == 0) { // restore default paddle length
+                if (t_paddle_restore_left > 0 && --t_paddle_restore_left == 0) { // restore default paddle length
                     pthread_mutex_lock(&mtx);
                     reduce_paddle(paddle_left);
                     pthread_mutex_unlock(&mtx);
                 }
-                if (--t_paddle_restore_right == 0) { // restore default paddle length
+                if (t_paddle_restore_right > 0 && --t_paddle_restore_right == 0) { // restore default paddle length
                     pthread_mutex_lock(&mtx);
                     reduce_paddle(paddle_right);
                     pthread_mutex_unlock(&mtx);
@@ -337,6 +352,8 @@ void game_loop()
             quit = shared_data.quit || quit;
             shared_data.congrats = congrats;
             is_countdown = shared_data.countdown;
+            knob_activate_left = shared_data.knob_activate.left;
+            knob_activate_right = shared_data.knob_activate.right;
             pthread_mutex_unlock(&mtx);
             pthread_cond_broadcast(&output_condvar);
             pthread_cond_broadcast(&knobs_condvar);
@@ -454,6 +471,8 @@ void *knobs_listening()
     int move_left = shared_data.paddle_move.left;
     int move_right = shared_data.paddle_move.right;
     int pause_menu_selected = shared_data.pause_menu_selected;
+    bool knob_activate_left = shared_data.knob_activate.left;
+    bool knob_activate_right = shared_data.knob_activate.right;
     pthread_mutex_unlock(&mtx);
     bool pause_menu_selected_changed = false;
     knobs_data kd;
@@ -486,6 +505,9 @@ void *knobs_listening()
             pause_menu_selected_changed = true;
         }
 
+        knob_activate_left = kd.rb;
+        knob_activate_right = kd.bb;
+
         if (!pause) {
             move_left = kd.rk;
             move_right = kd.bk;
@@ -504,6 +526,8 @@ void *knobs_listening()
 
         shared_data.paddle_move.left = move_left;
         shared_data.paddle_move.right = move_right;
+        shared_data.knob_activate.left = knob_activate_left;
+        shared_data.knob_activate.right = knob_activate_right;
         if (!quit)
             pthread_cond_wait(&knobs_condvar, &mtx);
         pthread_mutex_unlock(&mtx);
