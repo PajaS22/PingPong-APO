@@ -1,4 +1,4 @@
-// handle knobs input
+// mzapo red & green & blue knobs
 #include "knobs.h"
 #include "mzapo_phys.h"
 #include "mzapo_regs.h"

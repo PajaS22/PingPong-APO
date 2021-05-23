@@ -19,6 +19,7 @@
 #define RED hsv2rgb_lcd(5, 235, 255)
 #define GREEN hsv2rgb_lcd(145, 196, 255)
 #define BLUE hsv2rgb_lcd(199, 230, 255)
+#define PURPLE hsv2rgb_lcd(282, 100, 255)
     
 bool display_init();
 bool lcd_initialization(unsigned char **ret_lcd_mem_base);

@@ -3,6 +3,7 @@
 #include "game.h"
 #include "knobs.h"
 #include "keyboard.h"
+#include "LED.h"
 
 #define _POSIX_C_SOURCE 200112L
 #define _XOPEN_SOURCE 500
@@ -102,6 +103,7 @@ int main(int argc, char *argv[])
             }
             fprintf(stderr, "Main finished!\n");
             goodbye(frame_buff);
+            led_line_reset();
             if(!start){
                 for (int i = 0; i < num_of_threads; ++i) {
                     pthread_join(thrs[i], NULL);

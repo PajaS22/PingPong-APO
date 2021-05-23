@@ -3,6 +3,7 @@
 #include "mzapo_phys.h"
 #include "mzapo_regs.h"
 #include "LCD_output.h"
+#include "bonus.h"
 
 #define COUNTDOWN_SLEEP 1000000
 #define GOODBYE_SLEEP 2000000
@@ -239,7 +240,7 @@ void countdown(int x, int y, int scale, unsigned short *frame_buff) {
     unsigned short color = WHITE;
     for (int i = 0; i < countdown_num; ++i) {
         sprintf(tmp, "%d", countdown[i]);
-        draw_grounded_string(x + 95, y, ground_padding, ground_padding, color,
+        draw_grounded_string(x + 110, y, ground_padding, ground_padding, color,
                              BACKGROUND_COLOR, scale, frame_buff, tmp);
         update_display(frame_buff);
         usleep(COUNTDOWN_SLEEP);
@@ -270,18 +271,24 @@ void goodbye(unsigned short *frame_buff){
 }
 
 void print_congrats(unsigned short *frame_buff, unsigned short color) {
-    char *player_red = "RED WINS!";
+    char *player_red = " RED WINS!";
     char *player_blue = "BLUE WINS!";
+    char *draw = "IT'S A DRAW!";
     int ground_padding = 2;
     int scale = 4;
-    int x = 85;
+    int x = 80;
     int y = 120;
     set_display_black(frame_buff);
     char *winner;
-    (color == RED) ? (winner = player_red) : (winner = player_blue);
+    if (color == RED)
+        winner = player_red;
+    else if (color == BLUE) 
+        winner = player_blue;
+    else
+        winner = draw;
+
     draw_grounded_string(x, y, ground_padding, ground_padding, color,
                          BACKGROUND_COLOR, scale, frame_buff, winner);
-    printf("printong congrats\n");
     update_display(frame_buff);
     usleep(CONGRATS_SLEEP);
     set_display_black(frame_buff);

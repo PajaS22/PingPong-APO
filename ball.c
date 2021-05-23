@@ -1,5 +1,4 @@
 // pingpong ball
-
 #include "ball.h"
 
 #define POW2(x) x*x
@@ -30,14 +29,15 @@ Position new_position(Ball *ball){
     return (Position){.X = ball->pos.X + ball->velocity.X, .Y = ball->pos.Y + ball->velocity.Y};
 }
 
-bool paddle_touch(float ball_y, float paddle_y, int paddle_height){
-    return (ball_y >= paddle_y && ball_y <= paddle_y + paddle_height);
+bool paddle_touch(float ball_y, float paddle_y, int paddle_height, int radius){
+    return (ball_y + radius >= paddle_y && ball_y - radius <= paddle_y + paddle_height);
 }
 
 // returns double between -1 and 1
 double rebound_angle(float ball_y, float paddle_y, int paddle_height) {
     float mid = paddle_y + (paddle_height / 2);
-    double ret =  2 * (ball_y - mid) / paddle_height;
-    printf("rebound angle returns: %f\n", ret);
+    double ret = (2 * (ball_y - mid) / paddle_height);
+    if (ret > 1)
+        ret = 1;
     return ret;
 }

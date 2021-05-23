@@ -3,9 +3,9 @@
 #include "mzapo_phys.h"
 #include "game.h"
 
-#define RED 0x00FF0000
-#define BLUE 0x000000FF
-#define BLACK 0x0
+#define RED_LED 0x00FF0000
+#define BLUE_LED 0x000000FF
+#define SWITCH_OFF 0x0
 
 static unsigned char *led_mem_base;
 
@@ -23,12 +23,12 @@ bool led_init() {
 
 void goal_lights(int goal) {
     if (goal == LEFT_GOAL) 
-        *(volatile uint32_t*)(led_mem_base + SPILED_REG_LED_RGB1_o) = RED;
+        *(volatile uint32_t*)(led_mem_base + SPILED_REG_LED_RGB1_o) = RED_LED;
     else if (goal == RIGHT_GOAL)
-        *(volatile uint32_t*)(led_mem_base + SPILED_REG_LED_RGB2_o) = BLUE;
+        *(volatile uint32_t*)(led_mem_base + SPILED_REG_LED_RGB2_o) = BLUE_LED;
     else{
-        *(volatile uint32_t*)(led_mem_base + SPILED_REG_LED_RGB1_o) = BLACK;
-        *(volatile uint32_t*)(led_mem_base + SPILED_REG_LED_RGB2_o) = BLACK;
+        *(volatile uint32_t*)(led_mem_base + SPILED_REG_LED_RGB1_o) = SWITCH_OFF;
+        *(volatile uint32_t*)(led_mem_base + SPILED_REG_LED_RGB2_o) = SWITCH_OFF;
     }
 }
 
@@ -42,7 +42,7 @@ void led_line(int goals_l, int goals_r) {
             r |= tmp;
             tmp = tmp << 1;
         }
-        tmp = 1 << NUM_LEDS_LINE - 1;
+        tmp = 1 << (NUM_LEDS_LINE - 1);
         for (int i = 0; i < goals_l; ++i) {
             l |= tmp;
             tmp = tmp >> 1;

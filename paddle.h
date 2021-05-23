@@ -4,7 +4,7 @@
 #include "headers.h"
 
 #define PADDLE_WIDTH 10
-#define PADDLE_LENGTH 100
+#define PADDLE_LENGTH 120
 
 typedef struct {
     Position pos;

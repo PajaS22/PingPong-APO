@@ -26,7 +26,7 @@ void update_paddle(Position position, Position old_position, int width, int leng
 
 void move_paddle(Paddle *p, int move) {
     int new_y = p->pos.Y + move;
-    if(new_y >= 0 && new_y + PADDLE_LENGTH < DISPLAY_HEIGHT) {
+    if(new_y >= 0 && new_y + p->height < DISPLAY_HEIGHT) {
         p->pos.Y = new_y;
     }
 }
