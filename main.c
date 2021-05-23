@@ -21,7 +21,7 @@ struct shared {
 
 int main(int argc, char *argv[])
 {
-    if (display_init() && knobs_init()) {
+    if (display_init() && knobs_init() && led_init()) {
         unsigned short *frame_buff = (unsigned short *)malloc(DISPLAY_HEIGHT * DISPLAY_WIDTH *
                                               sizeof(unsigned short));
         if (frame_buff == NULL) {
@@ -46,7 +46,6 @@ int main(int argc, char *argv[])
             int move = 0;
             int selected = 0;
             bool start = false;
-            printf("printing menu\n");
             print_menu(MENU_OFFSET_X, MENU_OFFSET_Y, selected, frame_buff);
             update_display(frame_buff);
 

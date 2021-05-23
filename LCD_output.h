@@ -23,6 +23,7 @@
 bool display_init();
 bool lcd_initialization(unsigned char **ret_lcd_mem_base);
 void set_display_black(unsigned short *frame_buff);
+void clear_buffer(unsigned short *frame_buff);
 void update_display(unsigned short *frame_buff);
 unsigned int hsv2rgb_lcd(int hue, int saturation, int value);
 int char_width(int ch);
@@ -37,6 +38,7 @@ void print_menu(int x, int y, int selected, unsigned short *frame_buff);
 void print_pause_menu(int x, int y, int selected, unsigned short *frame_buff);
 void countdown(int x, int y, int scale, unsigned short *frame_buff);
 void goodbye(unsigned short *frame_buff);
+void print_congrats(unsigned short *frame_buff, unsigned short color);
 
 #endif
 

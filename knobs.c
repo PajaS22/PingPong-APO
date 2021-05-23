@@ -1,9 +1,11 @@
 // handle knobs input
 #include "knobs.h"
+#include "mzapo_phys.h"
 #include "mzapo_regs.h"
 
 #define HALF_KNOB 127
-#define MOVE_KNOB 6
+#define MOVE_KNOB_GREEN 6
+#define MOVE_KNOB_RED_BLUE 0
 
 static unsigned char *mem_base;
 
@@ -33,9 +35,9 @@ knobs_data get_rel_knob_value() {
     ret.gk = circle_value(actual_kd.gk - gk);
     ret.bk = circle_value(actual_kd.bk - bk);
     
-    (abs(ret.rk) > MOVE_KNOB) ? (rk = actual_kd.rk) : (ret.rk = 0);
-    (abs(ret.gk) > MOVE_KNOB) ? (gk = actual_kd.gk) : (ret.gk = 0);
-    (abs(ret.bk) > MOVE_KNOB) ? (bk = actual_kd.bk) : (ret.bk = 0);
+    (abs(ret.rk) > MOVE_KNOB_RED_BLUE) ? (rk = actual_kd.rk) : (ret.rk = 0);
+    (abs(ret.gk) > MOVE_KNOB_GREEN) ? (gk = actual_kd.gk) : (ret.gk = 0);
+    (abs(ret.bk) > MOVE_KNOB_RED_BLUE) ? (bk = actual_kd.bk) : (ret.bk = 0);
     
     ret.rb = actual_kd.rb;
     ret.gb = actual_kd.gb;

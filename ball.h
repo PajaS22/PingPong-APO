@@ -17,6 +17,7 @@ void init_ball(Ball *b, Position pos, Velocity velocity, unsigned short color, i
 void draw_ball(Position pos, int radius, unsigned short color, unsigned short *frame_buff);
 void update_ball(Position pos, Position old_pos, int radius, int old_radius, unsigned short color, unsigned short *frame_buff);
 Position new_position(Ball *ball);
-bool paddle_touch(int ball_y, int paddle_y, int paddle_height);
+bool paddle_touch(float ball_y, float paddle_y, int paddle_height);
+double rebound_angle(float ball_y, float paddle_y, int paddle_height);
 
 #endif

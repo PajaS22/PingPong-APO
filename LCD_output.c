@@ -4,8 +4,12 @@
 #include "mzapo_regs.h"
 #include "LCD_output.h"
 
+#define COUNTDOWN_SLEEP 1000000
+#define GOODBYE_SLEEP 2000000
+#define CONGRATS_SLEEP 2000000
+
 // global variables
-unsigned char *lcd_mem_base;
+static unsigned char *lcd_mem_base;
 font_descriptor_t *fdes;
 
 bool display_init(){
@@ -36,8 +40,16 @@ void set_display_black(unsigned short *frame_buff){
     }
 }
 
+void clear_buffer(unsigned short *frame_buff){
+    for(int h = 0; h < DISPLAY_HEIGHT; ++h){                   
+        for(int w = 0; w < DISPLAY_WIDTH; ++w){         
+            frame_buff[w+h*DISPLAY_WIDTH] = BLACK;
+        }                                                        
+    }
+}
+
 void update_display(unsigned short *frame_buff){
-    // parlcd_write_cmd(lcd_mem_base, CLEAN_CODE);
+    parlcd_write_cmd(lcd_mem_base, CLEAN_CODE);
     for (int ptr = 0; ptr < DISPLAY_WIDTH * DISPLAY_HEIGHT; ++ptr) {
         parlcd_write_data(lcd_mem_base, frame_buff[ptr]);
     }
@@ -218,8 +230,7 @@ void print_pause_menu(int x, int y, int selected, unsigned short *frame_buff){
     }
 }
 
-void countdown(int x, int y, int scale, unsigned short *frame_buff){
-    printf("counting\n");
+void countdown(int x, int y, int scale, unsigned short *frame_buff) {
     int countdown[] = {3, 2, 1};
     char *start = "START!";
     int ground_padding = 2;
@@ -231,12 +242,12 @@ void countdown(int x, int y, int scale, unsigned short *frame_buff){
         draw_grounded_string(x + 95, y, ground_padding, ground_padding, color,
                              BACKGROUND_COLOR, scale, frame_buff, tmp);
         update_display(frame_buff);
-        sleep(1);
+        usleep(COUNTDOWN_SLEEP);
     }
     draw_grounded_string(x, y, ground_padding, ground_padding, color,
                          BACKGROUND_COLOR, scale, frame_buff, start);
     update_display(frame_buff);
-    sleep(1);
+    usleep(COUNTDOWN_SLEEP);
     draw_grounded_string(x, y, ground_padding, ground_padding, BACKGROUND_COLOR,
                          BACKGROUND_COLOR, scale, frame_buff, start);
     update_display(frame_buff);
@@ -253,7 +264,26 @@ void goodbye(unsigned short *frame_buff){
     draw_grounded_string(x, y, ground_padding, ground_padding, color,
                          BACKGROUND_COLOR, scale, frame_buff, greeting);
     update_display(frame_buff);
-    sleep(2);
+    usleep(GOODBYE_SLEEP);
+    set_display_black(frame_buff);
+    update_display(frame_buff);
+}
+
+void print_congrats(unsigned short *frame_buff, unsigned short color) {
+    char *player_red = "RED WINS!";
+    char *player_blue = "BLUE WINS!";
+    int ground_padding = 2;
+    int scale = 4;
+    int x = 85;
+    int y = 120;
+    set_display_black(frame_buff);
+    char *winner;
+    (color == RED) ? (winner = player_red) : (winner = player_blue);
+    draw_grounded_string(x, y, ground_padding, ground_padding, color,
+                         BACKGROUND_COLOR, scale, frame_buff, winner);
+    printf("printong congrats\n");
+    update_display(frame_buff);
+    usleep(CONGRATS_SLEEP);
     set_display_black(frame_buff);
     update_display(frame_buff);
 }

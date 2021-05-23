@@ -13,7 +13,7 @@ SOURCES = main.c $(SRC_PATH)/mzapo_phys.c $(SRC_PATH)/mzapo_parlcd.c
 #SOURCES = main.c mzapo_phys.c mzapo_parlcd.c
 SOURCES += $(SRC_PATH)/font_prop14x16.c $(SRC_PATH)/font_rom8x16.c $(SRC_PATH)/font_types.h
 #SOURCES += font_prop14x16.c font_rom8x16.c font_types.h
-SOURCES += paddle.c ball.c knobs.c game.c LCD_output.c keyboard.c
+SOURCES += paddle.c ball.c knobs.c game.c LCD_output.c keyboard.c LED.c bonus.c
 
 TARGET_EXE = pingpong
 
@@ -22,7 +22,7 @@ ifeq ($(TARGET_IP),)
 ifneq ($(filter debug run,$(MAKECMDGOALS)),)
 $(warning The target IP address is not set)
 $(warning Run as "TARGET_IP=192.168.202.xxx make run" or modify Makefile)
-TARGET_IP ?= 192.168.4.119
+TARGET_IP ?= 10.0.0.28
 #TARGET_IP=192.168.202.214 make run
 endif
 endif

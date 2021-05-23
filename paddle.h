@@ -16,6 +16,6 @@ typedef struct {
 void init_paddle(Paddle *p, Position pos, unsigned short color);
 void draw_paddle(Position position, int paddle_width, int paddle_length, unsigned short color, unsigned short *frame_buff);
 void update_paddle(Position position, Position old_position, int width, int length, int old_length, unsigned short color, unsigned short *frame_buff);
-void show_paddle(Paddle *paddle, unsigned short *frame_buff);
+void move_paddle(Paddle *p, int move);
 
 #endif

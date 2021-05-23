@@ -24,6 +24,9 @@ void update_paddle(Position position, Position old_position, int width, int leng
     draw_paddle(position, width, length, color, frame_buff);
 }
 
-void show_paddle(Paddle *paddle, unsigned short *frame_buff){
-    draw_paddle(paddle->pos, paddle->width, paddle->height, paddle->color, frame_buff);
+void move_paddle(Paddle *p, int move) {
+    int new_y = p->pos.Y + move;
+    if(new_y >= 0 && new_y + PADDLE_LENGTH < DISPLAY_HEIGHT) {
+        p->pos.Y = new_y;
+    }
 }
