@@ -1,40 +1,13 @@
 // file for handling game objects
 // will handle colisions
 #include "game.h"
+
 #include "LED.h"
 #include "bonus.h"
 #include "headers.h"
 #include "keyboard.h"
 #include "knobs.h"
-
-#define UPDATE_RATE 150
-#define INITIAL_BALL_POSITION                                                  \
-    ((Position){.X = DISPLAY_WIDTH / 2, .Y = DISPLAY_HEIGHT / 2})
-#define INITIAL_BALL_SPEED 0.2
-#define INITIAL_BALL_RADIUS 10
-#define INITIAL_PADDLE_LEFT                                                    \
-    ((Position){.X = 0, .Y = DISPLAY_HEIGHT / 2 - PADDLE_LENGTH / 2})
-#define INITIAL_PADDLE_RIGHT                                                   \
-    ((Position){.X = DISPLAY_WIDTH - PADDLE_WIDTH,                             \
-                .Y = DISPLAY_HEIGHT / 2 - PADDLE_LENGTH / 2})
-#define COUNTDOWN_X 115
-#define COUNTDOWN_Y 105
-#define COUNTDOWN_SCALE 5
-#define BLICKING_PERIOD 50000
-#define PADDLE_SPEED 5
-#define BALL_SPEED 1
-#define MAX_GOALS ALL_GOALS
-#define PI 3.14159265358979323846
-#define ANGLE (PI / 5)
-#define EASY_ACCELERATION 1.05
-#define HARD_ACCELERATION 1.10
-#define GAMELOOP_SLEEP 500
-#define RESTORE_TIME 5000000
-#define SPAWN_TIME 6000000
-#define BONUS_RADIUS 7
-#define MAX_BONUSES_NBR 5
-#define ENLARGE_CONST 1.4
-#define MAXIMAL_VELOCITY_ANGLE (PI / 3) // 60 degrees
+#include "compute.h"
 
 enum { NORMAL_LEVEL, HARD_LEVEL, NBR_LEVELS };
 
@@ -42,12 +15,10 @@ void *terminal_listening();
 void *knobs_listening();
 void *lcd_output();
 void *led_output();
-void init_paddle(Paddle *p, Position pos, unsigned short color);
-void init_ball(Ball *b, Position pos, Velocity velocity, unsigned short color,
-               int radius);
+void init_paddle(Paddle *p, Position pos, ushort color);
+void init_ball(Ball *b, Position pos, Velocity velocity, ushort color, int radius);
 void init_shared_data();
 int move_ball(Ball *ball, Paddle *left, Paddle *right);
-
 
 static struct {
     int l, r;
@@ -59,7 +30,7 @@ static struct {
 int level;
 int last_hit;
 static double acceleration;
-unsigned short *frame_buff;
+ushort *frame_buff;
 enum { RESUME, EXIT };
 
 static pthread_cond_t input_condvar;
@@ -67,14 +38,14 @@ static pthread_cond_t output_condvar;
 static pthread_cond_t knobs_condvar;
 static pthread_mutex_t mtx;
 
-struct shared {
+static struct shared {
     bool quit;
     bool pause;
     bool redraw;
     int pause_menu_selected;
     struct led {
         bool state;
-        unsigned short color;
+        ushort color;
     } led1, led2;
     Ball *ball;
     struct {
@@ -82,7 +53,7 @@ struct shared {
         int i;
     } bonuses;
     struct {
-        Bonus bonus; // lcd display shall print this black
+        Bonus bonus;  // lcd display shall print this black
         bool delete;
     } delete_bonus;
     Paddle *paddle_left, *paddle_right;
@@ -92,13 +63,12 @@ struct shared {
     } paddle_move;
     int congrats;
     bool countdown;
-    struct{
+    struct {
         bool left, right;
-    }knob_activate;
+    } knob_activate;
 } shared_data;
 
-void init_shared_data()
-{
+void init_shared_data() {
     shared_data.quit = false;
     shared_data.pause = false;
     shared_data.countdown = false;
@@ -111,21 +81,17 @@ void init_shared_data()
     Ball *ball = malloc(sizeof(Ball));
     Paddle *paddle_l = malloc(sizeof(Paddle));
     Paddle *paddle_r = malloc(sizeof(Paddle));
-    
+
     if (!ball || !paddle_l || !paddle_r) {
-        if (ball)
-            free(ball);
-        if (paddle_l)
-            free(paddle_l);
-        if (paddle_r)
-            free(paddle_r);
+        if (ball) free(ball);
+        if (paddle_l) free(paddle_l);
+        if (paddle_r) free(paddle_r);
 
         fprintf(stderr, "ERROR: Not enough space for dynamic allocation!\n");
         call_stty(1);
         exit(EXIT_FAILURE);
     }
-    init_ball(ball, INITIAL_BALL_POSITION, gen_rand_ball_vel(), WHITE,
-              INITIAL_BALL_RADIUS);
+    init_ball(ball, INITIAL_BALL_POSITION, gen_rand_ball_vel(), WHITE, INITIAL_BALL_RADIUS);
     init_paddle(paddle_l, INITIAL_PADDLE_LEFT, RED);
     init_paddle(paddle_r, INITIAL_PADDLE_RIGHT, BLUE);
     shared_data.ball = ball;
@@ -140,8 +106,7 @@ void init_shared_data()
     shared_data.delete_bonus.delete = false;
 }
 
-void new_round()
-{
+void new_round() {
     last_hit = 0;
     shared_data.paddle_move.right = 0;
     shared_data.paddle_move.left = 0;
@@ -149,8 +114,7 @@ void new_round()
     shared_data.bonuses.i = 0;
     shared_data.delete_bonus.delete = false;
 
-    init_ball(shared_data.ball, INITIAL_BALL_POSITION, gen_rand_ball_vel(),
-              WHITE, INITIAL_BALL_RADIUS);
+    init_ball(shared_data.ball, INITIAL_BALL_POSITION, gen_rand_ball_vel(), WHITE, INITIAL_BALL_RADIUS);
     init_paddle(shared_data.paddle_left, INITIAL_PADDLE_LEFT, RED);
     init_paddle(shared_data.paddle_right, INITIAL_PADDLE_RIGHT, BLUE);
 
@@ -160,8 +124,7 @@ void new_round()
     pthread_cond_broadcast(&output_condvar);
 }
 
-void start_game(unsigned short *fb, int lev)
-{
+void start_game(ushort *fb, int lev) {
     frame_buff = fb;
     level = lev;
 
@@ -173,8 +136,7 @@ void start_game(unsigned short *fb, int lev)
     // threads
     enum { INPUT_TERMINAL, INPUT_KNOBS, OUTPUT_LCD, NUM_THREADS };
     char *all_threads[] = {"Terminal", "Knobs", "LCD"};
-    void *(*thr_threads[])(void *) = {terminal_listening, knobs_listening,
-                                      lcd_output};
+    void *(*thr_threads[])(void *) = {terminal_listening, knobs_listening, lcd_output};
     pthread_t threads[NUM_THREADS];
     for (int i = 0; i < NUM_THREADS; ++i) {
         printf("Creating %s thread\n", all_threads[i]);
@@ -191,23 +153,22 @@ void start_game(unsigned short *fb, int lev)
 // returns 0 if no goal detected
 // returns 1 if goal on right occured
 // returns -1 if goal on left occured
-int move_ball(Ball *ball, Paddle *left, Paddle *right)
-{
+int move_ball(Ball *ball, Paddle *left, Paddle *right) {
     int ret = 0;
     double new_angle;
     int radius = ball->radius;
-    Position new_pos = new_position(ball); // compute next position
+    Position new_pos = new_position(ball);  // compute next position
     Velocity velocity = ball->velocity;
 
     // bouncing on top and bottom
-    if (new_pos.Y + radius >= DISPLAY_HEIGHT) { // bottom wall
+    if (new_pos.Y + radius >= DISPLAY_HEIGHT) {  // bottom wall
         new_pos.Y = 2 * DISPLAY_HEIGHT - new_pos.Y - 2 * radius;
         velocity.Y = -velocity.Y;
-    } else if (new_pos.Y - radius <= 0) { // upper wall
+    } else if (new_pos.Y - radius <= 0) {  // upper wall
         new_pos.Y = -new_pos.Y + 2 * radius;
         velocity.Y = -velocity.Y;
         // bouncing on paddles
-    } else if (new_pos.X - radius <= LEFT_BORDER) { // left wall
+    } else if (new_pos.X - radius <= LEFT_BORDER) {  // left wall
         if (paddle_touch(ball->pos.Y, left->pos.Y, left->height, radius)) {
             last_hit = LEFT_PLAYER;
             new_pos.X = 2 * LEFT_BORDER - new_pos.X + 2 * radius;
@@ -218,11 +179,11 @@ int move_ball(Ball *ball, Paddle *left, Paddle *right)
             multiply_vel(&velocity, acceleration);
         } else
             ret = LEFT_GOAL;
-    } else if (new_pos.X + radius >= RIGHT_BORDER) { // right wall
+    } else if (new_pos.X + radius >= RIGHT_BORDER) {  // right wall
         if (paddle_touch(ball->pos.Y, right->pos.Y, right->height, radius)) {
             last_hit = RIGHT_PLAYER;
             new_pos.X = 2 * RIGHT_BORDER - new_pos.X - 2 * radius;
-            new_angle = - ANGLE * rebound_angle(new_pos.Y, right->pos.Y, right->height);
+            new_angle = -ANGLE * rebound_angle(new_pos.Y, right->pos.Y, right->height);
             velocity.X = -velocity.X;
             // rotate
             velocity = rotate(velocity, new_angle);
@@ -236,8 +197,7 @@ int move_ball(Ball *ball, Paddle *left, Paddle *right)
     return ret;
 }
 
-void game_loop()
-{
+void game_loop() {
     // printf("start game loop\n");
     pthread_mutex_lock(&mtx);
     Ball *ball = shared_data.ball;
@@ -250,7 +210,7 @@ void game_loop()
     bool knob_activate_left = shared_data.knob_activate.left;
     bool knob_activate_right = shared_data.knob_activate.right;
     pthread_mutex_unlock(&mtx);
-    int t_spawn_bonus = 0; // time
+    int t_spawn_bonus = 0;  // time
     int t_paddle_restore_left = 0;
     int t_paddle_restore_right = 0;
     bool enlarge_ability_left = false;
@@ -269,14 +229,12 @@ void game_loop()
                 pthread_mutex_lock(&mtx);
                 move_paddle(paddle_left, PADDLE_SPEED * shared_data.paddle_move.left);
                 move_paddle(paddle_right, -PADDLE_SPEED * shared_data.paddle_move.right);
-                if ((goal = move_ball(ball, paddle_left, paddle_right))) { // goal
+                if ((goal = move_ball(ball, paddle_left, paddle_right))) {  // goal
                     if (goal == LEFT_GOAL) {
-                        if (++score.r >= MAX_GOALS)
-                                score.r = MAX_GOALS;
+                        if (++score.r >= MAX_GOALS) score.r = MAX_GOALS;
                         blick_n_times(10, BLICKING_PERIOD, RIGHT_GOAL);
                     } else if (goal == RIGHT_GOAL) {
-                        if (++score.l >= MAX_GOALS)
-                                score.l = MAX_GOALS;
+                        if (++score.l >= MAX_GOALS) score.l = MAX_GOALS;
                         blick_n_times(10, BLICKING_PERIOD, LEFT_GOAL);
                     }
                     led_line(score.l, score.r);
@@ -291,23 +249,21 @@ void game_loop()
                     }
                 }
                 int idx_hit;
-                if ((idx_hit = bonus_hit(shared_data.bonuses.arr, shared_data.bonuses.i, ball)) != NO_HIT){
-                    switch (shared_data.bonuses.arr[idx_hit].bonus_mode){
+                if ((idx_hit = bonus_hit(shared_data.bonuses.arr, shared_data.bonuses.i, ball)) != NO_HIT) {
+                    switch (shared_data.bonuses.arr[idx_hit].bonus_mode) {
                         case POINTS_BONUS:
                             if (last_hit == LEFT_PLAYER) {
-                                if (++score.l >= MAX_GOALS)
-                                    score.l = MAX_GOALS;
+                                if (++score.l >= MAX_GOALS) score.l = MAX_GOALS;
                                 led_line(score.l, score.r);
                             } else if (last_hit == RIGHT_PLAYER) {
-                                if (++score.r >= MAX_GOALS)
-                                    score.r = MAX_GOALS;
+                                if (++score.r >= MAX_GOALS) score.r = MAX_GOALS;
                                 led_line(score.l, score.r);
                             }
                             break;
                         case ENLARGE_BONUS:
                             if (last_hit == LEFT_PLAYER)
                                 enlarge_ability_left = true;
-                            else if (last_hit == RIGHT_PLAYER) 
+                            else if (last_hit == RIGHT_PLAYER)
                                 enlarge_ability_right = true;
                             break;
                     }
@@ -315,18 +271,18 @@ void game_loop()
                     shared_data.delete_bonus.delete = true;
                     shared_data.bonuses.i--;
                 }
-                if(knob_activate_left && enlarge_ability_left){ // enlarge left paddle
+                if (knob_activate_left && enlarge_ability_left) {  // enlarge left paddle
                     enlarge_ability_left = false;
                     t_paddle_restore_left = RESTORE_TIME / GAMELOOP_SLEEP;
                     enlarge_paddle(paddle_left);
                 }
-                if(knob_activate_right && enlarge_ability_right){ // enlarge left paddle
+                if (knob_activate_right && enlarge_ability_right) {  // enlarge left paddle
                     enlarge_ability_right = false;
                     t_paddle_restore_right = RESTORE_TIME / GAMELOOP_SLEEP;
                     enlarge_paddle(paddle_right);
                 }
                 pthread_mutex_unlock(&mtx);
-                if (++t_spawn_bonus == SPAWN_TIME / GAMELOOP_SLEEP) { // add bonus
+                if (++t_spawn_bonus == SPAWN_TIME / GAMELOOP_SLEEP) {  // add bonus
                     t_spawn_bonus = 0;
                     pthread_mutex_lock(&mtx);
                     int i = shared_data.bonuses.i;
@@ -336,12 +292,12 @@ void game_loop()
                     }
                     pthread_mutex_unlock(&mtx);
                 }
-                if (t_paddle_restore_left > 0 && --t_paddle_restore_left == 0) { // restore default paddle length
+                if (t_paddle_restore_left > 0 && --t_paddle_restore_left == 0) {  // restore default paddle length
                     pthread_mutex_lock(&mtx);
                     reduce_paddle(paddle_left);
                     pthread_mutex_unlock(&mtx);
                 }
-                if (t_paddle_restore_right > 0 && --t_paddle_restore_right == 0) { // restore default paddle length
+                if (t_paddle_restore_right > 0 && --t_paddle_restore_right == 0) {  // restore default paddle length
                     pthread_mutex_lock(&mtx);
                     reduce_paddle(paddle_right);
                     pthread_mutex_unlock(&mtx);
@@ -368,8 +324,7 @@ void game_loop()
 }
 
 // terminal in game listening
-void *terminal_listening()
-{
+void *terminal_listening() {
     printf("Terminal thread running\n");
     pthread_mutex_lock(&mtx);
     bool quit = shared_data.quit;
@@ -389,53 +344,53 @@ void *terminal_listening()
             move_right = 0;
             move_left = 0;
             switch (c) {
-            case 'r':
-                move_left = -5;
-                break;
-            case 'f':
-                move_left = 5;
-                break;
-            case 'i':
-                move_right = -5;
-                break;
-            case 'k':
-                move_right = 5;
-                break;
-            case 'w':
-                if (pause && pause_menu_selected > 0) {
-                    --pause_menu_selected;
-                    pause_menu_selected_changed = true;
-                }
-                break;
-            case 's':
-                if (pause && pause_menu_selected < PAUSE_MENU_SELECTION) {
-                    ++pause_menu_selected;
-                    pause_menu_selected_changed = true;
-                }
-                break;
-            case 'd':
-                if (pause) {
-                    switch (pause_menu_selected) {
-                        case RESUME:
-                            pthread_mutex_lock(&mtx);
-                            shared_data.pause = false;
-                            pthread_mutex_unlock(&mtx);
-                            break;
-                        case EXIT:
-                            quit = true;
-                            break;
+                case 'r':
+                    move_left = -5;
+                    break;
+                case 'f':
+                    move_left = 5;
+                    break;
+                case 'i':
+                    move_right = -5;
+                    break;
+                case 'k':
+                    move_right = 5;
+                    break;
+                case 'w':
+                    if (pause && pause_menu_selected > 0) {
+                        --pause_menu_selected;
+                        pause_menu_selected_changed = true;
                     }
-                }
-                break;
-            case 'p':
-                pthread_mutex_lock(&mtx);
-                shared_data.pause = true;
-                pthread_mutex_unlock(&mtx);
-                break;
-            case 'q':
-                quit = true;
-                break;
-            } // end switch
+                    break;
+                case 's':
+                    if (pause && pause_menu_selected < PAUSE_MENU_SELECTION) {
+                        ++pause_menu_selected;
+                        pause_menu_selected_changed = true;
+                    }
+                    break;
+                case 'd':
+                    if (pause) {
+                        switch (pause_menu_selected) {
+                            case RESUME:
+                                pthread_mutex_lock(&mtx);
+                                shared_data.pause = false;
+                                pthread_mutex_unlock(&mtx);
+                                break;
+                            case EXIT:
+                                quit = true;
+                                break;
+                        }
+                    }
+                    break;
+                case 'p':
+                    pthread_mutex_lock(&mtx);
+                    shared_data.pause = true;
+                    pthread_mutex_unlock(&mtx);
+                    break;
+                case 'q':
+                    quit = true;
+                    break;
+            }  // end switch
         } else if (r < 0) {
             fprintf(stderr, "ERROR: Keyboard reading error");
             quit = true;
@@ -451,10 +406,8 @@ void *terminal_listening()
             shared_data.pause_menu_selected = pause_menu_selected;
         else
             pause_menu_selected = shared_data.pause_menu_selected;
-        if (move_left)
-            shared_data.paddle_move.left = move_left;
-        if (move_right)
-            shared_data.paddle_move.right = move_right;
+        if (move_left) shared_data.paddle_move.left = move_left;
+        if (move_right) shared_data.paddle_move.right = move_right;
         pthread_mutex_unlock(&mtx);
         pthread_cond_broadcast(&input_condvar);
     }
@@ -462,8 +415,7 @@ void *terminal_listening()
     return EXIT_SUCCESS;
 }
 
-void *knobs_listening()
-{
+void *knobs_listening() {
     printf("Knobs thread running\n");
     pthread_mutex_lock(&mtx);
     bool quit = shared_data.quit;
@@ -477,22 +429,22 @@ void *knobs_listening()
     bool pause_menu_selected_changed = false;
     knobs_data kd;
 
-    while (!quit) { // enter knobs listening
+    while (!quit) {  // enter knobs listening
         kd = get_rel_knob_value();
         pause_menu_selected_changed = false;
         if (kd.gb) {
             usleep(DEBOUNCE_GREEN_KNOB);
             if (pause) {
                 switch (pause_menu_selected) {
-                case RESUME:
-                    pthread_mutex_lock(&mtx);
-                    shared_data.pause = false;
-                    pthread_mutex_unlock(&mtx);
-                    pause = false;
-                    break;
-                case EXIT:
-                    quit = true;
-                    break;
+                    case RESUME:
+                        pthread_mutex_lock(&mtx);
+                        shared_data.pause = false;
+                        pthread_mutex_unlock(&mtx);
+                        pause = false;
+                        break;
+                    case EXIT:
+                        quit = true;
+                        break;
                 }
             } else
                 pause = true;
@@ -528,16 +480,14 @@ void *knobs_listening()
         shared_data.paddle_move.right = move_right;
         shared_data.knob_activate.left = knob_activate_left;
         shared_data.knob_activate.right = knob_activate_right;
-        if (!quit)
-            pthread_cond_wait(&knobs_condvar, &mtx);
+        if (!quit) pthread_cond_wait(&knobs_condvar, &mtx);
         pthread_mutex_unlock(&mtx);
     }
     printf("Knobs thread exiting\n");
     return EXIT_SUCCESS;
 }
 
-void *lcd_output()
-{
+void *lcd_output() {
     // shared values
     pthread_mutex_lock(&mtx);
     Ball *ball = shared_data.ball;
@@ -551,9 +501,9 @@ void *lcd_output()
     Position paddle_l_pos = paddle_left->pos;
     Position paddle_r_pos = paddle_right->pos;
     int radius = ball->radius;
-    unsigned short ball_color = ball->color;
-    unsigned short paddle_l_color = paddle_left->color;
-    unsigned short paddle_r_color = paddle_right->color;
+    ushort ball_color = ball->color;
+    ushort paddle_l_color = paddle_left->color;
+    ushort paddle_r_color = paddle_right->color;
     int paddle_l_width = paddle_left->width;
     int paddle_r_width = paddle_right->width;
     int paddle_l_length = paddle_left->height;
@@ -608,16 +558,15 @@ void *lcd_output()
 
         if ((!quit) || congrats) {
             if (pause)
-                print_pause_menu(PAUSE_MENU_OFFSET_X, PAUSE_MENU_OFFSET_Y,
-                                 pause_menu_selected, frame_buff);
+                print_pause_menu(PAUSE_MENU_OFFSET_X, PAUSE_MENU_OFFSET_Y, pause_menu_selected, frame_buff);
             else if (congrats) {
                 printf("congrats in LCD thread\n");
-                unsigned short congr_color;
-                if(congrats == LEFT_PLAYER)
+                ushort congr_color;
+                if (congrats == LEFT_PLAYER)
                     congr_color = RED;
-                else if(congrats == RIGHT_PLAYER)
+                else if (congrats == RIGHT_PLAYER)
                     congr_color = BLUE;
-                else // draw
+                else  // draw
                     congr_color = PURPLE;
                 print_congrats(frame_buff, congr_color);
 
@@ -636,7 +585,7 @@ void *lcd_output()
             } else {
                 pthread_mutex_lock(&mtx);
                 print_bonuses(shared_data.bonuses.arr, shared_data.bonuses.i, frame_buff);
-                if (shared_data.delete_bonus.delete){
+                if (shared_data.delete_bonus.delete) {
                     Bonus del = shared_data.delete_bonus.bonus;
                     del.ball.color = BACKGROUND_COLOR;
                     print_bonus(&del, frame_buff);
@@ -644,14 +593,9 @@ void *lcd_output()
                 }
                 pthread_mutex_unlock(&mtx);
 
-                update_ball(ball_pos, old__ball_pos, radius, old_radius,
-                            ball_color, frame_buff);
-                update_paddle(paddle_l_pos, old__paddle_l_pos, paddle_l_width,
-                              paddle_l_length, old_paddle_l_length,
-                              paddle_l_color, frame_buff);
-                update_paddle(paddle_r_pos, old__paddle_r_pos, paddle_r_width,
-                              paddle_r_length, old_paddle_r_length,
-                              paddle_r_color, frame_buff);
+                update_ball(ball_pos, old__ball_pos, radius, old_radius, ball_color, frame_buff);
+                update_paddle(paddle_l_pos, old__paddle_l_pos, paddle_l_width, paddle_l_length, old_paddle_l_length, paddle_l_color, frame_buff);
+                update_paddle(paddle_r_pos, old__paddle_r_pos, paddle_r_width, paddle_r_length, old_paddle_r_length, paddle_r_color, frame_buff);
 
                 old__ball_pos = ball_pos;
                 old_radius = radius;
@@ -667,17 +611,14 @@ void *lcd_output()
     return EXIT_SUCCESS;
 }
 
-Velocity gen_rand_ball_vel()
-{
+Velocity gen_rand_ball_vel() {
     double random_value;
     srand(time(NULL));
-    random_value =
-        ((double)rand() / RAND_MAX * 2.0) - 1.0; // float in range -1 to 1
+    random_value = ((double)rand() / RAND_MAX * 2.0) - 1.0;  // float in range -1 to 1
     double r = 45. * (random_value / 100 - 1);
     double x = sin(r);
     double y = cos(r);
-    random_value =
-        ((double)rand() / RAND_MAX * 2.0) - 1.0; // float in range -1 to 1
+    random_value = ((double)rand() / RAND_MAX * 2.0) - 1.0;  // float in range -1 to 1
     if (random_value < 0) {
         x *= -1;
         y *= -1;
@@ -685,99 +626,44 @@ Velocity gen_rand_ball_vel()
     return (Velocity){.X = INITIAL_BALL_SPEED * x, .Y = INITIAL_BALL_SPEED * y};
 }
 
-void multiply_vel(Velocity *vel, float mult)
-{
-    vel->X *= mult;
-    vel->Y *= mult;
-}
-
-float max(float a, float b){
-    float ret;
-    (a > b) ? (ret = a) : (ret = b);
-    return ret;
-}
-
-float min(float a, float b){
-    float ret;
-    (a > b) ? (ret = b) : (ret = a);
-    return ret;
-}
-
-Velocity rotate(Velocity old_vel, double angle){
-    Velocity new_vel;
-    new_vel.X = (cos(angle) * old_vel.X) - (sin(angle) * old_vel.Y);
-    new_vel.Y = (sin(angle) * old_vel.X) + (cos(angle) * old_vel.Y);
-    return new_vel;
-}
-
-void enlarge_paddle(Paddle *pad){
-    if(pad->height * ENLARGE_CONST <= DISPLAY_HEIGHT){
+void enlarge_paddle(Paddle *pad) {
+    if (pad->height * ENLARGE_CONST <= DISPLAY_HEIGHT) {
         float enl = pad->height * (ENLARGE_CONST - 1);
         float enl_up, enl_down;
         float dist_up, dist_down;
         dist_up = pad->pos.Y;
         dist_down = DISPLAY_HEIGHT - (pad->pos.Y + pad->height);
         enl_up = enl_down = enl / 2;
-        if (dist_up >= enl_up) { // adding to the top of the paddle
+        if (dist_up >= enl_up) {  // adding to the top of the paddle
             pad->pos.Y -= enl_up;
             pad->height += enl_up;
         } else {
-            enl_down += (enl_up - dist_up); // there is not enought space
-            pad->pos.Y -= dist_up;        // so the rest is added down
+            enl_down += (enl_up - dist_up);  // there is not enought space
+            pad->pos.Y -= dist_up;           // so the rest is added down
             pad->height += dist_up;
-        } enl_up = 0;
+        }
+        enl_up = 0;
 
-        if (dist_down >= enl_down) { // adding to the down part of the paddle
+        if (dist_down >= enl_down) {  // adding to the down part of the paddle
             pad->height += enl_down;
-        } else {         
-            enl_up += (enl_down - dist_down); // there is not enought space
+        } else {
+            enl_up += (enl_down - dist_down);  // there is not enought space
             pad->pos.Y -= min(pad->pos.Y, enl_up);
-            pad->height += min(pad->pos.Y, enl_up); // so the rest is added up
-        } enl_down = 0;
+            pad->height += min(pad->pos.Y, enl_up);  // so the rest is added up
+        }
+        enl_down = 0;
     }
 }
 
-void reduce_paddle(Paddle *pad){
+void reduce_paddle(Paddle *pad) {
     double reduce = (pad->height - PADDLE_LENGTH) / 2;
     pad->height = PADDLE_LENGTH;
     pad->pos.Y += reduce;
-} 
+}
 
 void maximal_angle(Velocity *vel) {
     double x = vel->X;
     double y = vel->Y;
-    double alpha = my_abs(atan(y/x));
-    if(alpha > MAXIMAL_VELOCITY_ANGLE){
-        *vel = rotate(*vel, my_sign(x * y) * (MAXIMAL_VELOCITY_ANGLE - alpha));
-    }
+    double alpha = my_abs(atan(y / x));
+    if (alpha > MAXIMAL_VELOCITY_ANGLE) { *vel = rotate(*vel, my_sign(x * y) * (MAXIMAL_VELOCITY_ANGLE - alpha)); }
 }
-
-double my_abs(double n){
-    if (n < 0)
-        n *= -1;
-    return n;
-}
-
-int my_sign(double n){
-    if (n > 0)
-        return 1;
-    else if (n < 0)
-        return -1;
-    else  
-        return 0;
-}
-
-/*if (my_abs(angle) > MAXIMAL_VELOCITY_ANGLE) {
-        float size = sqrt(pow(x, 2) + pow(y, 2));
-        if (angle > 0) {
-            x = size * -cos(MAXIMAL_VELOCITY_ANGLE);
-            y = size * sin(MAXIMAL_VELOCITY_ANGLE);
-        } else {
-            x = size * cos(MAXIMAL_VELOCITY_ANGLE);
-            y = size * -sin(MAXIMAL_VELOCITY_ANGLE);
-        } printf("JOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO\n");
-        vel->X = x;
-        vel->Y = y;
-    }
-    */
-    

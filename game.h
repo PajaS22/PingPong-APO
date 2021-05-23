@@ -2,8 +2,8 @@
 #define GAME_H
 
 #include "LCD_output.h"
-#include "paddle.h"
 #include "ball.h"
+#include "paddle.h"
 
 #define NO_GOAL 0
 #define LEFT_GOAL -1
@@ -18,20 +18,39 @@
 #define BOTTOM_BORDER DISPLAY_HEIGHT
 #define DEBOUNCE_GREEN_KNOB 300000
 
+#define UPDATE_RATE 150
+#define INITIAL_BALL_POSITION ((Position){.X = DISPLAY_WIDTH / 2, .Y = DISPLAY_HEIGHT / 2})
+#define INITIAL_BALL_SPEED 0.2
+#define INITIAL_BALL_RADIUS 10
+#define INITIAL_PADDLE_LEFT ((Position){.X = 0, .Y = DISPLAY_HEIGHT / 2 - PADDLE_LENGTH / 2})
+#define INITIAL_PADDLE_RIGHT ((Position){.X = DISPLAY_WIDTH - PADDLE_WIDTH, .Y = DISPLAY_HEIGHT / 2 - PADDLE_LENGTH / 2})
+#define COUNTDOWN_X 115
+#define COUNTDOWN_Y 105
+#define COUNTDOWN_SCALE 5
+#define BLICKING_PERIOD 50000
+#define PADDLE_SPEED 5
+#define BALL_SPEED 1
+#define MAX_GOALS ALL_GOALS
+#define PI 3.14159265358979323846
+#define ANGLE (PI / 5)
+#define EASY_ACCELERATION 1.05
+#define HARD_ACCELERATION 1.10
+#define GAMELOOP_SLEEP 500
+#define RESTORE_TIME 5000000  // usec
+#define SPAWN_TIME 6000000    // usec
+#define BONUS_RADIUS 7
+#define MAX_BONUSES_NBR 5
+#define ENLARGE_CONST 1.4
+#define MAXIMAL_VELOCITY_ANGLE (PI / 3)  // 60 degrees
+
 enum { Normal, Hard };
 
 void start_game();
 void game_loop();
 void new_round();
 Velocity gen_rand_ball_vel();
-void multiply_vel(Velocity *vel, float mult);
-float max(float a, float b);
-float min(float a, float b);
 void enlarge_paddle(Paddle *pad);
 void reduce_paddle(Paddle *pad);
-Velocity rotate(Velocity old_vel, double angle);
 void maximal_angle(Velocity *vel);
-double my_abs(double n);
-int my_sign(double n);
 
 #endif

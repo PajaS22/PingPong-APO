@@ -1,6 +1,7 @@
 #ifndef HEADERS_H
 #define HEADERS_H
 
+#include <math.h>
 #include <pthread.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -10,17 +11,18 @@
 #include <termios.h>
 #include <time.h>
 #include <unistd.h>
-#include <math.h>
 
-typedef struct{
+typedef struct {
     float X;
     float Y;
-}Position;
+} Position;
 
-typedef struct{
+typedef struct {
     float X;
     float Y;
-}Velocity;
+} Velocity;
+
+typedef unsigned short ushort;
 
 void call_stty(int reset);
 

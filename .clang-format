@@ -1,0 +1,19 @@
+{
+BasedOnStyle: Chromium, 
+IndentWidth: 4,
+AllowShortIfStatementsOnASingleLine: "false",
+ColumnLimit: "180",
+AllowShortBlocksOnASingleLine: true,
+AllowShortIfStatementsOnASingleLine: true, 
+BreakBeforeBraces: Custom,
+PointerAlignment: "Right",
+BraceWrapping: { 
+    AfterControlStatement: "true", 
+    AfterEnum: "false", 
+    AfterFunction: "false", 
+    AfterStruct: "false", 
+    AfterUnion: "true",
+    AfterControlStatement: "false",
+    BeforeElse: "false" 
+}
+}

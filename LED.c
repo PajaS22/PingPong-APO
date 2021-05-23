@@ -1,7 +1,7 @@
 #include "LED.h"
-#include "mzapo_regs.h"
-#include "mzapo_phys.h"
 #include "game.h"
+#include "mzapo_phys.h"
+#include "mzapo_regs.h"
 
 #define RED_LED 0x00FF0000
 #define BLUE_LED 0x000000FF
@@ -15,20 +15,21 @@ bool led_init() {
     if (!led_mem_base) {
         fprintf(stderr, "ERROR: Physical address could not be allocated!\n");
         ret = false;
-    }else{
+    } else {
         led_line(NO_GOAL, NO_GOAL);
         goal_lights(NO_GOAL);
-    } return ret;
-}  
+    }
+    return ret;
+}
 
 void goal_lights(int goal) {
-    if (goal == LEFT_GOAL) 
-        *(volatile uint32_t*)(led_mem_base + SPILED_REG_LED_RGB1_o) = RED_LED;
+    if (goal == LEFT_GOAL)
+        *(volatile uint32_t *)(led_mem_base + SPILED_REG_LED_RGB1_o) = RED_LED;
     else if (goal == RIGHT_GOAL)
-        *(volatile uint32_t*)(led_mem_base + SPILED_REG_LED_RGB2_o) = BLUE_LED;
-    else{
-        *(volatile uint32_t*)(led_mem_base + SPILED_REG_LED_RGB1_o) = SWITCH_OFF;
-        *(volatile uint32_t*)(led_mem_base + SPILED_REG_LED_RGB2_o) = SWITCH_OFF;
+        *(volatile uint32_t *)(led_mem_base + SPILED_REG_LED_RGB2_o) = BLUE_LED;
+    else {
+        *(volatile uint32_t *)(led_mem_base + SPILED_REG_LED_RGB1_o) = SWITCH_OFF;
+        *(volatile uint32_t *)(led_mem_base + SPILED_REG_LED_RGB2_o) = SWITCH_OFF;
     }
 }
 
@@ -36,7 +37,7 @@ void led_line(int goals_l, int goals_r) {
     if (goals_l <= ALL_GOALS && goals_r <= ALL_GOALS) {
         int l = 0;
         short r = 0;
-        
+
         unsigned int tmp = 1;
         for (int i = 0; i < goals_r; ++i) {
             r |= tmp;
@@ -46,12 +47,13 @@ void led_line(int goals_l, int goals_r) {
         for (int i = 0; i < goals_l; ++i) {
             l |= tmp;
             tmp = tmp >> 1;
-        } *(volatile uint32_t*)(led_mem_base + SPILED_REG_LED_LINE_o) = l | r;
+        }
+        *(volatile uint32_t *)(led_mem_base + SPILED_REG_LED_LINE_o) = l | r;
     }
 }
 
-void led_line_reset(){
-    *(volatile uint32_t*)(led_mem_base + SPILED_REG_LED_LINE_o) = 0;
+void led_line_reset() {
+    *(volatile uint32_t *)(led_mem_base + SPILED_REG_LED_LINE_o) = 0;
 }
 
 void blick_n_times(int n, int period, int colour) {
@@ -59,6 +61,6 @@ void blick_n_times(int n, int period, int colour) {
         goal_lights(colour);
         usleep(period);
         goal_lights(NO_GOAL);
-        usleep(period);   
+        usleep(period);
     }
 }

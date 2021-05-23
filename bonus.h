@@ -11,19 +11,17 @@
 
 typedef enum { POINTS_BONUS, ENLARGE_BONUS } bonus_type;
 
-typedef struct{
+typedef struct {
     Ball ball;
     bonus_type bonus_mode;
-}Bonus;
+} Bonus;
 
 // set random position within specified area
 void init_bonus(Bonus *b, int radius);
-void print_bonuses(Bonus *bonuses, int nbr_bonuses, unsigned short *frame_buff);
-void print_bonus(Bonus *bonus, unsigned short *frame_buff);
+void print_bonuses(Bonus *bonuses, int nbr_bonuses, ushort *frame_buff);
+void print_bonus(Bonus *bonus, ushort *frame_buff);
 int bonus_hit(Bonus *bonuses, int nbr_bonuses, Ball *ball);
 bool bonus_touch(Bonus *bonus, Ball *ball);
 Bonus remove_bonus(Bonus *bonuses, int idx, int nbr_bonuses);
-
-
 
 #endif
