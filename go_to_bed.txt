@@ -1,3 +1,0 @@
-scp svobop60@postel.felk.cvut.cz:/opt/zynq/ssh-connect/mzapo-root-key ~/.ssh/mzapo-root-key
-chmod go-rwx ~/.ssh/mzapo-root-key
-ssh-add ~/.ssh/mzapo-root-key

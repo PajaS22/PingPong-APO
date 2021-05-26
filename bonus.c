@@ -1,4 +1,3 @@
-// hard play mode
 #include "bonus.h"
 
 // random position within specified area

@@ -32,8 +32,7 @@ void draw_char(int x, int y, char ch, ushort color, int scale, ushort *frame_buf
 void draw_pixel(int x, int y, ushort color, ushort *frame_buff);
 void draw_pixel_big(int x, int y, int scale, ushort color, ushort *frame_buff);
 void draw_string(int x, int y, ushort color, int scale, ushort *frame_buff, char *string);
-void draw_grounded_string(int x, int y, int padding_x, int padding_y, ushort color, 
-                         ushort color_back, int scale, ushort *frame_buff, char *string);
+void draw_grounded_string(int x, int y, int padding_x, int padding_y, ushort color, ushort color_back, int scale, ushort *frame_buff, char *string);
 void print_menu(int x, int y, int selected, ushort *frame_buff);
 void print_pause_menu(int x, int y, int selected, ushort *frame_buff);
 void countdown(int x, int y, int scale, ushort *frame_buff);

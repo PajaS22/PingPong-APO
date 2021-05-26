@@ -1,5 +1,5 @@
-#include "headers.h"
 #include "compute.h"
+#include "headers.h"
 
 double my_abs(double n) {
     if (n < 0) n *= -1;
@@ -38,4 +38,3 @@ Velocity rotate(Velocity old_vel, double angle) {
     new_vel.Y = (sin(angle) * old_vel.X) + (cos(angle) * old_vel.Y);
     return new_vel;
 }
-

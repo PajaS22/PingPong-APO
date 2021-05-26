@@ -107,6 +107,7 @@ int main(int argc, char *argv[]) {
             }
             fprintf(stderr, "All threads finished!\n");
             call_stty(1);
+            free(frame_buff);
         }
     }
     return EXIT_SUCCESS;

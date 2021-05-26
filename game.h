@@ -16,7 +16,7 @@
 #define RIGHT_BORDER (DISPLAY_WIDTH - PADDLE_WIDTH)
 #define UPPER_BORDER 0
 #define BOTTOM_BORDER DISPLAY_HEIGHT
-#define DEBOUNCE_GREEN_KNOB 300000
+#define DEBOUNCE_GREEN_KNOB 150000  // 150 ms
 
 #define UPDATE_RATE 150
 #define INITIAL_BALL_POSITION ((Position){.X = DISPLAY_WIDTH / 2, .Y = DISPLAY_HEIGHT / 2})
@@ -40,8 +40,9 @@
 #define SPAWN_TIME 6000000    // usec
 #define BONUS_RADIUS 7
 #define MAX_BONUSES_NBR 5
-#define ENLARGE_CONST 1.4
+#define ENLARGE_CONST 1.4                // enlarge paddle
 #define MAXIMAL_VELOCITY_ANGLE (PI / 3)  // 60 degrees
+#define KEYBOARD_PADDLE_CONTROL 3
 
 enum { Normal, Hard };
 

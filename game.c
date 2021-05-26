@@ -4,10 +4,10 @@
 
 #include "LED.h"
 #include "bonus.h"
+#include "compute.h"
 #include "headers.h"
 #include "keyboard.h"
 #include "knobs.h"
-#include "compute.h"
 
 enum { NORMAL_LEVEL, HARD_LEVEL, NBR_LEVELS };
 
@@ -15,9 +15,13 @@ void *terminal_listening();
 void *knobs_listening();
 void *lcd_output();
 void *led_output();
+
+void init_shared_data();
+void clean_shared_data();
+
 void init_paddle(Paddle *p, Position pos, ushort color);
 void init_ball(Ball *b, Position pos, Velocity velocity, ushort color, int radius);
-void init_shared_data();
+
 int move_ball(Ball *ball, Paddle *left, Paddle *right);
 
 static struct {
@@ -106,11 +110,16 @@ void init_shared_data() {
     shared_data.delete_bonus.delete = false;
 }
 
+void clean_shared_data() {
+    if (shared_data.ball) free(shared_data.ball);
+    if (shared_data.paddle_left) free(shared_data.paddle_left);
+    if (shared_data.paddle_right) free(shared_data.paddle_right);
+}
+
 void new_round() {
     last_hit = 0;
     shared_data.paddle_move.right = 0;
     shared_data.paddle_move.left = 0;
-    shared_data.congrats = 0;
     shared_data.bonuses.i = 0;
     shared_data.delete_bonus.delete = false;
 
@@ -147,6 +156,7 @@ void start_game(ushort *fb, int lev) {
     for (int i = 0; i < NUM_THREADS; ++i) {
         pthread_join(threads[i], NULL);
     }
+    clean_shared_data();
     set_display_black(fb);
 }
 
@@ -198,7 +208,6 @@ int move_ball(Ball *ball, Paddle *left, Paddle *right) {
 }
 
 void game_loop() {
-    // printf("start game loop\n");
     pthread_mutex_lock(&mtx);
     Ball *ball = shared_data.ball;
     Paddle *paddle_left = shared_data.paddle_left;
@@ -210,12 +219,14 @@ void game_loop() {
     bool knob_activate_left = shared_data.knob_activate.left;
     bool knob_activate_right = shared_data.knob_activate.right;
     pthread_mutex_unlock(&mtx);
+
     int t_spawn_bonus = 0;  // time
     int t_paddle_restore_left = 0;
     int t_paddle_restore_right = 0;
     bool enlarge_ability_left = false;
     bool enlarge_ability_right = false;
     int goal = NO_GOAL;
+    int idx_hit;
     while (!quit) {
         goal = NO_GOAL;
 
@@ -239,6 +250,7 @@ void game_loop() {
                     }
                     led_line(score.l, score.r);
 
+                    // somebody got all points
                     if (score.l >= MAX_GOALS || score.r >= MAX_GOALS) {
                         if (score.l > score.r)
                             congrats = LEFT_PLAYER;
@@ -248,7 +260,6 @@ void game_loop() {
                             congrats = DRAW;
                     }
                 }
-                int idx_hit;
                 if ((idx_hit = bonus_hit(shared_data.bonuses.arr, shared_data.bonuses.i, ball)) != NO_HIT) {
                     switch (shared_data.bonuses.arr[idx_hit].bonus_mode) {
                         case POINTS_BONUS:
@@ -271,17 +282,22 @@ void game_loop() {
                     shared_data.delete_bonus.delete = true;
                     shared_data.bonuses.i--;
                 }
+                pthread_mutex_unlock(&mtx);
+
                 if (knob_activate_left && enlarge_ability_left) {  // enlarge left paddle
                     enlarge_ability_left = false;
                     t_paddle_restore_left = RESTORE_TIME / GAMELOOP_SLEEP;
+                    pthread_mutex_lock(&mtx);
                     enlarge_paddle(paddle_left);
+                    pthread_mutex_unlock(&mtx);
                 }
                 if (knob_activate_right && enlarge_ability_right) {  // enlarge left paddle
                     enlarge_ability_right = false;
                     t_paddle_restore_right = RESTORE_TIME / GAMELOOP_SLEEP;
+                    pthread_mutex_lock(&mtx);
                     enlarge_paddle(paddle_right);
+                    pthread_mutex_unlock(&mtx);
                 }
-                pthread_mutex_unlock(&mtx);
                 if (++t_spawn_bonus == SPAWN_TIME / GAMELOOP_SLEEP) {  // add bonus
                     t_spawn_bonus = 0;
                     pthread_mutex_lock(&mtx);
@@ -303,6 +319,8 @@ void game_loop() {
                     pthread_mutex_unlock(&mtx);
                 }
             }
+
+            // update local copies of shared data
             pthread_mutex_lock(&mtx);
             pause = shared_data.pause;
             quit = shared_data.quit || quit;
@@ -311,10 +329,13 @@ void game_loop() {
             knob_activate_left = shared_data.knob_activate.left;
             knob_activate_right = shared_data.knob_activate.right;
             pthread_mutex_unlock(&mtx);
+
+            // signal to threads
             pthread_cond_broadcast(&output_condvar);
             pthread_cond_broadcast(&knobs_condvar);
+
             usleep(GAMELOOP_SLEEP);
-        }
+        }  // end while !goal && !quit
         pthread_mutex_lock(&mtx);
         shared_data.quit = shared_data.quit || quit;
         pthread_mutex_unlock(&mtx);
@@ -345,16 +366,16 @@ void *terminal_listening() {
             move_left = 0;
             switch (c) {
                 case 'r':
-                    move_left = -5;
+                    move_left = -KEYBOARD_PADDLE_CONTROL;
                     break;
                 case 'f':
-                    move_left = 5;
+                    move_left = KEYBOARD_PADDLE_CONTROL;
                     break;
                 case 'i':
-                    move_right = -5;
+                    move_right = -KEYBOARD_PADDLE_CONTROL;
                     break;
                 case 'k':
-                    move_right = 5;
+                    move_right = KEYBOARD_PADDLE_CONTROL;
                     break;
                 case 'w':
                     if (pause && pause_menu_selected > 0) {
@@ -407,7 +428,7 @@ void *terminal_listening() {
         else
             pause_menu_selected = shared_data.pause_menu_selected;
         if (move_left) shared_data.paddle_move.left = move_left;
-        if (move_right) shared_data.paddle_move.right = move_right;
+        if (move_right) shared_data.paddle_move.right = -move_right;
         pthread_mutex_unlock(&mtx);
         pthread_cond_broadcast(&input_condvar);
     }
@@ -432,6 +453,8 @@ void *knobs_listening() {
     while (!quit) {  // enter knobs listening
         kd = get_rel_knob_value();
         pause_menu_selected_changed = false;
+
+        // GREEN KNOB BUTTON PRESSED
         if (kd.gb) {
             usleep(DEBOUNCE_GREEN_KNOB);
             if (pause) {
@@ -449,6 +472,8 @@ void *knobs_listening() {
             } else
                 pause = true;
         }
+
+        // GREEN KNOB ROTATED
         if (kd.gk < 0 && pause_menu_selected > 0) {
             --pause_menu_selected;
             pause_menu_selected_changed = true;

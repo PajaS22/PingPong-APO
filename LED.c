@@ -13,7 +13,7 @@ bool led_init() {
     bool ret = true;
     led_mem_base = map_phys_address(SPILED_REG_BASE_PHYS, SPILED_REG_SIZE, 0);
     if (!led_mem_base) {
-        fprintf(stderr, "ERROR: Physical address could not be allocated!\n");
+        fprintf(stderr, "ERROR: Physical address could not be mapped!\n");
         ret = false;
     } else {
         led_line(NO_GOAL, NO_GOAL);

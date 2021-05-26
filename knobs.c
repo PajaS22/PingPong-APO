@@ -17,7 +17,7 @@ bool knobs_init() {
     bool ret = true;
     mem_base = map_phys_address(SPILED_REG_BASE_PHYS, SPILED_REG_SIZE, 0);
     if (mem_base == NULL) {
-        fprintf(stderr, "ERROR: Physical address could not be allocated!\n");
+        fprintf(stderr, "ERROR: Physical address could not be mapped!\n");
         ret = false;
     }
     // set starting values of knobs
