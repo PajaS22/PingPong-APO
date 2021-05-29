@@ -2,106 +2,74 @@
 title: 'README PingPong'
 disqus: pingpong game
 ---
-APO_sem README
----
-###### tags: `PingPong`
+# Ping Pong
 
-Semestrálka na APO
-
-Ping Pong
-3 módy:
--normal: jen pingpong
--hard: létají tam bonusové body, kdo je trefí, ten je dostane
--extreme: létají tam i překážky, různě natočené, otáčející se,...
-
-Bitové diody mohou počítat body obou hráčů
-
-(tleskání na konci, zvukové)
-
+The Ping Pong game was created as a semestral project for a subject *Arcitecture of computers* at CTU in May 2021.
+The authors are Šimon Lehký and Pavel Svoboda.  
+(c) 2021 All trademarks are the property of their respective owners.
 
 ## Table of Contents
 
 [TOC]
 
-## Beginners Guide
+## How to play
 
-If you are a total beginner to this, start here!
+If you are a total beginner to the game, read this:
 
-1. Visit hackmd.io
-2. Click "Sign in"
-3. Choose a way to sign in
-4. Start writing note!
+### Main menu control
+* You can control the menu by rotating green knob.
+* Select an option by clicking the green button on the green knob.
+* The menu gives you three options:
+    * Easy ... starts the game with an easy mode
+    * Hard ... starts the game with a hard mode
+    * Exit ... shutdowns the application
 
-User story
----
+### In-game control
+* Both players have their own knob.
+* Players control their paddle by rotating the red or blue knob.
+* When catched **tean bonus point**, the player can enlarge his paddle by clicking the button on the knob.
 
-```gherkin=
-Feature: Guess the word
+### What's the goal?
+* Goal of the game is to score 16 points.
+* The game ends when one of the players has 16 points at the end of the round.
+* And how to get a point? Both players try to rebound the ball, when they fail to do so, the other player gets a point As we say: *he scores a goal!*
+* When scoring a goal, a blue or red LED starts blinking to indicate that one of the players has hit the net.
+* Another possibility how to get a point is by catching **yellow bonus balls**.
 
-  # The first example has two steps
-  Scenario: Maker starts a game
-    When the Maker starts a game
-    Then the Maker waits for a Breaker to join
+### Bonus balls
+* Every 5 seconds a bonus ball spawns on the screen. Its position and color are randomly chosen and the ball can be either yellow or tean (*tean is light blue*).
+* There can be up to five bonus balls at the same time in game.
+* A **yellow bonus ball** gives player a point.
+* A **tean bonus ball** gives the player a possibility to enlarge his paddle for the next 5 seconds. If not used, the advantage is passed to the following round and can be used then.
 
-  # The second example has three steps
-  Scenario: Breaker joins a game
-    Given the Maker has started a game with the word "silky"
-    When the Breaker joins the Maker's game
-    Then the Breaker must guess a word with 5 characters
-```
-> I choose a lazy person to do a hard job. Because a lazy person will find an easy way to do it. [name=Bill Gates]
+### Pause menu control
+* To open the pause menu, press the green knob.
+* The pause menu the gives you two options:
+    * Resume ... continues the game
+    * Exit ... ends the game instantly and returns the players back to the main menu
 
 
-```gherkin=
-Feature: Shopping Cart
-  As a Shopper
-  I want to put items in my shopping cart
-  Because I want to manage items before I check out
+## Preview of the MicroZed board
 
-  Scenario: User adds item to cart
-    Given I'm a logged-in User
-    When I go to the Item page
-    And I click "Add item to cart"
-    Then the quantity of items in my cart should go up
-    And my subtotal should increment
-    And the warehouse inventory should decrement
-```
+![](https://i.imgur.com/qwI8ZB1.png)
 
-> Read more about Gherkin here: https://docs.cucumber.io/gherkin/reference/
+## Preview of the main menu
 
-User flows
----
-```sequence
-Alice->Bob: Hello Bob, how are you?
-Note right of Bob: Bob thinks
-Bob-->Alice: I am good thanks!
-Note left of Alice: Alice responds
-Alice->Bob: Where have you been?
-```
 
-> Read more about sequence-diagrams here: http://bramp.github.io/js-sequence-diagrams/
 
-Project Timeline
----
-```mermaid
-gantt
-    title A Gantt Diagram
+## Preview of the game
 
-    section Section
-    A task           :a1, 2014-01-01, 30d
-    Another task     :after a1  , 20d
-    section Another
-    Task in sec      :2014-01-12  , 12d
-    anther task      : 24d
-```
 
-> Read more about mermaid here: http://mermaid-js.github.io/mermaid/
+
+## Preview of the pause menu
+
+
 
 ## Appendix and FAQ
 
 :::info
-**Find this document incomplete?** Leave a comment!
+**Find this document incomplete?** Leave us a comment!
 :::
 
-###### tags: `Templates` `Documentation`
+###### tags: `PingPong` `Documentation`
 
