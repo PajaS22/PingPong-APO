@@ -22,7 +22,7 @@ typedef struct {
     float Y;
 } Velocity;
 
-typedef unsigned short pixel; 
+typedef uint16_t pixel;
 
 /* sets terminal to raw mode */
 void call_stty(int reset);
