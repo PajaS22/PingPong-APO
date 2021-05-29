@@ -1,20 +1,18 @@
 #include "bonus.h"
 
-// random position within specified area
 void init_bonus(Bonus *b, int radius) {
-    ushort colors[] = {
+    pixel colors[] = {
         [POINTS_BONUS] = YELLOW,
         [ENLARGE_BONUS] = TEAL,
     };
-
     double random_value1;
     double random_value2;
     double random_value3;
     srand(time(NULL));
 
-    random_value1 = (double)rand() / RAND_MAX;            // double in range 0 to 1
-    random_value2 = (double)rand() / RAND_MAX;            // double in range 0 to 1
-    random_value3 = ((double)rand() / RAND_MAX) * 2 - 1;  // double in range -1 to 1
+    random_value1 = (double)rand() / RAND_MAX;           // double <0; 1>
+    random_value2 = (double)rand() / RAND_MAX;           // double <0; 1>
+    random_value3 = ((double)rand() / RAND_MAX) * 2 - 1; // double <-1; 1>
 
     b->bonus_mode = random_value3 >= 0 ? POINTS_BONUS : ENLARGE_BONUS;
     b->ball.color = colors[b->bonus_mode];
@@ -24,17 +22,15 @@ void init_bonus(Bonus *b, int radius) {
     b->ball.pos.Y = radius + random_value2 * (DISPLAY_HEIGHT - radius * 2);
 }
 
-// print all active bonuses
-void print_bonuses(Bonus *bonuses, int nbr_bonuses, ushort *frame_buff) {
+void print_bonuses(Bonus *bonuses, int nbr_bonuses, pixel *frame_buff) {
     for (int i = 0; i < nbr_bonuses; ++i)
         draw_ball(bonuses[i].ball.pos, bonuses[i].ball.radius, bonuses[i].ball.color, frame_buff);
 }
 
-void print_bonus(Bonus *bonus, ushort *frame_buff) {
+void print_bonus(Bonus *bonus, pixel *frame_buff) {
     draw_ball(bonus->ball.pos, bonus->ball.radius, bonus->ball.color, frame_buff);
 }
 
-// returns index of a ball that was hit
 int bonus_hit(Bonus *bonuses, int nbr_bonuses, Ball *ball) {
     for (int i = 0; i < nbr_bonuses; ++i) {
         if (bonus_touch(&(bonuses[i]), ball)) return i;
