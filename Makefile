@@ -22,16 +22,16 @@ ifeq ($(TARGET_IP),)
 ifneq ($(filter debug run,$(MAKECMDGOALS)),)
 $(warning The target IP address is not set)
 $(warning Run as "TARGET_IP=192.168.202.xxx make run" or modify Makefile)
-TARGET_IP ?= 10.0.0.21
+TARGET_IP ?= 192.168.202.207
 #TARGET_IP=192.168.202.214 make run
 endif
 endif
 TARGET_DIR ?= /tmp/$(shell whoami)
 TARGET_USER ?= root
 # for use from Eduroam network use TARGET_IP=localhost and enable next line
-SSH_OPTIONS=-o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" -o "Port=2222"
+#SSH_OPTIONS=-o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" -o "Port=2222"
 SSH_OPTIONS=-i ~/.ssh/mzapo-root-key
-#SSH_OPTIONS=-o 'ProxyJump=svobop60@postel.felk.cvut.cz'
+SSH_OPTIONS=-o 'ProxyJump=svobop60@postel.felk.cvut.cz'
 
 OBJECTS += $(filter %.o,$(SOURCES:%.c=%.o))
 OBJECTS += $(filter %.o,$(SOURCES:%.cpp=%.o))
