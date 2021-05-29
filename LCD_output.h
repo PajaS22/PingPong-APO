@@ -43,7 +43,7 @@ void set_display_black(pixel *frame_buff);
 /* sets all pixels in the buffer to zero */
 void clear_buffer(pixel *frame_buff);
 
-/* prints the frame buffer to the LCD display */
+/* prints the frame buffer to the LCD */
 void update_display(pixel *frame_buff);
 
 /* returns an RGB value of the color given in hue syntax */
