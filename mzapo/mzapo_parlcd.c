@@ -15,7 +15,7 @@
 #define _POSIX_C_SOURCE 200112L
 
 //#define HX8357_B
-#define ILI9481
+//#define ILI9481
 
 #include <stdint.h>
 #include <time.h>
