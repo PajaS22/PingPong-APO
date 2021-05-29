@@ -1,18 +1,28 @@
-// file for handling game objects
-// will handle colisions
 #include "game.h"
 #include "LED.h"
 #include "bonus.h"
 #include "compute.h"
-#include "headers.h"
 #include "keyboard.h"
 #include "knobs.h"
 
 enum { NORMAL_LEVEL, HARD_LEVEL, NBR_LEVELS };
 
-/* threads for the game */
+/* 
+ * watches terminal for user activity
+ * terminal control is described in the game documentation
+ */
 void *terminal_listening();
+
+/* 
+ * waits for a response from one of the three RGB knobs to play the game
+ * reports the current state of knobs in the shared_data structure
+ */
 void *knobs_listening();
+
+/* 
+ * draws the frame buffer on the display
+ * if there is request for printing countdown or pause menu, it prints it
+ */
 void *lcd_output();
 
 /* intializes data for both paddles and the ball */
@@ -22,8 +32,8 @@ void init_shared_data();
 void clean_shared_data();
 
 /*
- * Changes ball position depending on its valocity
- * Controls if ball hits paddle or hits the net
+ * changes ball position depending on its valocity
+ * controls if ball hits paddle or hits the net
  * returns 0 if no goal detected
  * returns 1 if goal on right occured
  * returns -1 if goal on left occured
@@ -40,7 +50,7 @@ static struct {
 static int level;
 static int last_hit;
 static double acceleration;
-ushort *frame_buff;
+pixel *frame_buff;
 enum pause_menu { RESUME, EXIT };
 
 static pthread_cond_t input_condvar;
@@ -48,6 +58,7 @@ static pthread_cond_t output_condvar;
 static pthread_cond_t knobs_condvar;
 static pthread_mutex_t mtx;
 
+// data shared among threads
 static struct shared {
     bool quit;
     bool pause;
@@ -55,7 +66,7 @@ static struct shared {
     int pause_menu_selected;
     struct led {
         bool state;
-        ushort color;
+        pixel color;
     } led1, led2;
     Ball *ball;
     struct {
@@ -141,7 +152,7 @@ void new_round() {
     pthread_cond_broadcast(&output_condvar);
 }
 
-void start_game(ushort *fb, int lev) {
+void start_game(pixel *fb, int lev) {
     frame_buff = fb;
     level = lev;
 
@@ -530,9 +541,9 @@ void *lcd_output() {
     Position paddle_l_pos = paddle_left->pos;
     Position paddle_r_pos = paddle_right->pos;
     int radius = ball->radius;
-    ushort ball_color = ball->color;
-    ushort paddle_l_color = paddle_left->color;
-    ushort paddle_r_color = paddle_right->color;
+    pixel ball_color = ball->color;
+    pixel paddle_l_color = paddle_left->color;
+    pixel paddle_r_color = paddle_right->color;
     int paddle_l_width = paddle_left->width;
     int paddle_r_width = paddle_right->width;
     int paddle_l_length = paddle_left->height;
@@ -590,7 +601,7 @@ void *lcd_output() {
                 print_pause_menu(PAUSE_MENU_OFFSET_X, PAUSE_MENU_OFFSET_Y, pause_menu_selected, frame_buff);
             else if (congrats) {
                 printf("congrats in LCD thread\n");
-                ushort congr_color;
+                pixel congr_color;
                 if (congrats == LEFT_PLAYER)
                     congr_color = RED;
                 else if (congrats == RIGHT_PLAYER)

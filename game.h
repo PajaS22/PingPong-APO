@@ -3,6 +3,7 @@
 
 #include "LCD_output.h"
 #include "ball.h"
+#include "headers.h"
 #include "paddle.h"
 
 // GOALS & PLAYERS
@@ -28,7 +29,8 @@
 // BALL
 #define BALL_SPEED 1
 #define PI 3.14159265358979323846
-#define ANGLE (PI / 5)
+#define ANGLE (PI / 5)              // angle added to the rebounce angle after a rebounce at the paddle edge
+                                    // the ANGLE is multiplied by the rebound_angle() return value
 #define EASY_ACCELERATION 1.05
 #define HARD_ACCELERATION 1.10
 #define INITIAL_BALL_SPEED 0.2
@@ -45,34 +47,33 @@
 // BONUS
 #define BONUS_RADIUS 7
 #define MAX_BONUSES_NBR 5
-#define ENLARGE_CONST 1.4     // enlarge paddle
+#define ENLARGE_CONST 1.4           // enlarge paddle
 
 // TIMES
-#define UPDATE_RATE 150
-#define GAMELOOP_SLEEP 500
-#define BLICKING_PERIOD 50000
-#define RESTORE_TIME 5000000  // usec
-#define SPAWN_TIME 6000000    // usec
-#define DEBOUNCE_GREEN_KNOB 150000  // 150 ms
+#define GAMELOOP_SLEEP 500          // gameloop speed
+#define BLICKING_PERIOD 50000       // time of the LED blicking after a goal
+#define RESTORE_TIME 5000000        // 5 s ... time of enlarged paddle, after this time the original length will be restored
+#define SPAWN_TIME 6000000          // 6 s ... time of spawning bonuses
+#define DEBOUNCE_GREEN_KNOB 200000  // 200 ms ... user must hold the grean knob for at least 200 ms to realize a press
 
 // LEVELS OF THE GAME
 enum { Normal, Hard };
 
 /* 
-* prepares variables for a new game
-* creates game threads
-* calls the game loop
-* after returning game loop, it frees allocated memory, joins threads
-*/
+ * prepares variables for a new game
+ * creates game threads
+ * calls the game loop
+ * after returning game loop, it frees allocated memory, joins threads
+ */
 void start_game();
 
 /* main loop of the game */
 void game_loop();
 
 /*
-* prepares for the next round
-* starts the countdown
-*/
+ * prepares for the next round
+ * starts the countdown
+ */
 void new_round();
 
 /* generates a random initial ball velocity */
