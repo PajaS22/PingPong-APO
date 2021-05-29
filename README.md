@@ -49,6 +49,14 @@ If you are a total beginner to the game, read this:
     * Exit ... ends the game instantly and returns the players back to the main menu
 
 
+## Compilation and run process for dummies
+1. Connect the MZAPO board to your local internet network.
+2. Connect your PC to your local internet network.
+3. Change 'TARGET_IP' on line 18 in our Makefile to your IP adress.
+4. Run this command in your terminal while being in the directory of our pingpong game (it will compile the project and send it to the MZAPO board) and then you must change the IP adress there as well:  
+`TARGET_IP=192.168.202.214 make run`
+5. Enjoy the game!
+
 ## Preview of the MicroZed board
 
 ![](https://i.imgur.com/qwI8ZB1.png)
@@ -65,7 +73,7 @@ If you are a total beginner to the game, read this:
 
 
 
-## Appendix and FAQ
+## Appendix
 
 :::info
 **Find this document incomplete?** Leave us a comment!
