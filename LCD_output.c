@@ -5,13 +5,21 @@
 #include "mzapo_phys.h"
 #include "mzapo_regs.h"
 
-#define COUNTDOWN_SLEEP 1000000
-#define GOODBYE_SLEEP 2000000
-#define CONGRATS_SLEEP 2000000
+#define COUNTDOWN_SLEEP 1000000 // 1 second
+#define GOODBYE_SLEEP 2000000   // 2 seconds
+#define CONGRATS_SLEEP 2000000  // 2 seconds 
 
-// global variables
 static unsigned char *lcd_mem_base;
-font_descriptor_t *fdes;
+static font_descriptor_t *fdes;
+
+static char *player_red_wins = " RED WINS!";
+static char *player_blue_wins = "BLUE WINS!";
+static char *draw = "IT'S A DRAW!";
+static char *menu[] = { "PING PONG", "Normal", "Hard", "Exit" };
+static char *pause_menu[] = {"Pause menu", "Resume", "Exit"};
+static int countdown_ints[] = { 3, 2, 1 };
+static char *start = "START!";
+static char *greeting = "GOODBYE!";
 
 bool display_init() {
     bool ret = lcd_initialization(&lcd_mem_base);
@@ -31,7 +39,7 @@ bool lcd_initialization(unsigned char **ret_lcd_mem_base) {
     return ret;
 }
 
-void set_display_black(ushort *frame_buff) {
+void set_display_black(pixel *frame_buff) {
     for (int h = 0; h < DISPLAY_HEIGHT; ++h) {
         for (int w = 0; w < DISPLAY_WIDTH; ++w) {
             parlcd_write_data(lcd_mem_base, BLACK);
@@ -40,7 +48,7 @@ void set_display_black(ushort *frame_buff) {
     }
 }
 
-void clear_buffer(ushort *frame_buff) {
+void clear_buffer(pixel *frame_buff) {
     for (int h = 0; h < DISPLAY_HEIGHT; ++h) {
         for (int w = 0; w < DISPLAY_WIDTH; ++w) {
             frame_buff[w + h * DISPLAY_WIDTH] = BLACK;
@@ -48,7 +56,7 @@ void clear_buffer(ushort *frame_buff) {
     }
 }
 
-void update_display(ushort *frame_buff) {
+void update_display(pixel *frame_buff) {
     parlcd_write_cmd(lcd_mem_base, CLEAN_CODE);
     for (int ptr = 0; ptr < DISPLAY_WIDTH * DISPLAY_HEIGHT; ++ptr) {
         parlcd_write_data(lcd_mem_base, frame_buff[ptr]);
@@ -103,20 +111,20 @@ int char_width(int ch) {
     return width;
 }
 
-void draw_char(int x, int y, char ch, ushort color, int scale, ushort *frame_buff) {
+void draw_char(int x, int y, char ch, pixel color, int scale, pixel *frame_buff) {
     int w = char_width(ch);
     const font_bits_t *ptr_data;
     if ((ch >= fdes->firstchar) && (ch - fdes->firstchar < fdes->size)) {  // the char is within the struct
         if (fdes->offset) {                                                // letters' offsets are defined
             ptr_data = &fdes->bits[fdes->offset[ch - fdes->firstchar]];
         } else {
-            int bw = (fdes->maxwidth + 15) / 16;  // ???
+            int bw = (fdes->maxwidth + 15) / 16;
             ptr_data = &fdes->bits[(ch - fdes->firstchar) * bw * fdes->height];
         }
         for (int i = 0; i < fdes->height; i++) {
             font_bits_t val = *ptr_data;
             for (int j = 0; j < w; j++) {
-                if ((val & 0x8000) != 0) {  // 0000 1000 0000 0000 0000
+                if ((val & 0x8000) != 0) {  // 1000 0000 0000 0000
                     draw_pixel_big(x + scale * j, y + scale * i, scale, color, frame_buff);
                 }
                 val <<= 1;
@@ -126,11 +134,11 @@ void draw_char(int x, int y, char ch, ushort color, int scale, ushort *frame_buf
     }
 }
 
-void draw_pixel(int x, int y, ushort color, ushort *frame_buff) {
+void draw_pixel(int x, int y, pixel color, pixel *frame_buff) {
     if (x >= 0 && x < DISPLAY_WIDTH && y >= 0 && y < DISPLAY_HEIGHT) { frame_buff[x + DISPLAY_WIDTH * y] = color; }
 }
 
-void draw_pixel_big(int x, int y, int scale, ushort color, ushort *frame_buff) {
+void draw_pixel_big(int x, int y, int scale, pixel color, pixel *frame_buff) {
     for (int i = 0; i < scale; ++i) {
         for (int j = 0; j < scale; ++j) {
             draw_pixel(x + i, y + j, color, frame_buff);
@@ -138,7 +146,7 @@ void draw_pixel_big(int x, int y, int scale, ushort color, ushort *frame_buff) {
     }
 }
 
-void draw_string(int x, int y, ushort color, int scale, ushort *frame_buff, char *string) {
+void draw_string(int x, int y, pixel color, int scale, pixel *frame_buff, char *string) {
     int w;
     for (char *c = string; *c != '\0'; c++) {
         w = char_width(*c) * scale;
@@ -151,7 +159,7 @@ void draw_string(int x, int y, ushort color, int scale, ushort *frame_buff, char
     }
 }
 
-void draw_grounded_string(int x, int y, int padding_x, int padding_y, ushort color, ushort color_background, int scale, ushort *frame_buff, char *string) {
+void draw_grounded_string(int x, int y, int padding_x, int padding_y, pixel color, pixel color_background, int scale, pixel *frame_buff, char *string) {
     int width = 0;
     for (char *c = string; *c != '\0'; c++) {
         width += char_width(*c);
@@ -171,14 +179,13 @@ void draw_grounded_string(int x, int y, int padding_x, int padding_y, ushort col
     draw_string(x, y, color, scale, frame_buff, string);
 }
 
-void print_menu(int x, int y, int selected, ushort *frame_buff) {
-    char *menu[] = {"PING PONG", "Normal", "Hard", "Exit"};
-    int menu_num = sizeof(menu) / sizeof(char *);
+void print_menu(int x, int y, int selected, pixel *frame_buff) {
+    int menu_num = sizeof(menu) / sizeof(char*);
     int line_padding = 3;
     int ground_padding = 1;
-    ushort color = WHITE;
-    ushort color_on_ground = BLACK;
-    ushort color_background = GREEN;
+    pixel color = WHITE;
+    pixel color_on_ground = BLACK;
+    pixel color_background = GREEN;
     int center_x = -50;
 
     int scale = 3;
@@ -192,36 +199,33 @@ void print_menu(int x, int y, int selected, ushort *frame_buff) {
     }
 }
 
-void print_pause_menu(int x, int y, int selected, ushort *frame_buff) {
-    char *menu[] = {"Pause menu", "Resume", "Exit"};
-    int menu_num = sizeof(menu) / sizeof(char *);
+void print_pause_menu(int x, int y, int selected, pixel *frame_buff) {
+    int menu_num = sizeof(pause_menu) / sizeof(char *);
     int line_padding = 3;
     int ground_padding = 1;
-    ushort color = WHITE;
-    ushort color_on_ground = BLACK;
-    ushort color_background = GREEN;
+    pixel color = WHITE;
+    pixel color_on_ground = BLACK;
+    pixel color_background = GREEN;
     int center_x = -30;
 
     int scale = 3;
     for (int i = 0; i < menu_num; ++i) {
         if (i > 0) center_x = 0;
         if (i == selected + 1)
-            draw_grounded_string(x + center_x, y, ground_padding, ground_padding, color_on_ground, color_background, scale, frame_buff, menu[i]);
+            draw_grounded_string(x + center_x, y, ground_padding, ground_padding, color_on_ground, color_background, scale, frame_buff, pause_menu[i]);
         else
-            draw_grounded_string(x + center_x, y, ground_padding, ground_padding, color, BACKGROUND_COLOR, scale, frame_buff, menu[i]);
+            draw_grounded_string(x + center_x, y, ground_padding, ground_padding, color, BACKGROUND_COLOR, scale, frame_buff, pause_menu[i]);
         y += (fdes->height + line_padding) * scale;
     }
 }
 
-void countdown(int x, int y, int scale, ushort *frame_buff) {
-    int countdown[] = {3, 2, 1};
-    char *start = "START!";
+void countdown(int x, int y, int scale, pixel *frame_buff) {
     int ground_padding = 2;
     char tmp[2];
-    int countdown_num = sizeof(countdown) / sizeof(int);
-    ushort color = WHITE;
+    int countdown_num = sizeof(countdown_ints) / sizeof(int);
+    pixel color = WHITE;
     for (int i = 0; i < countdown_num; ++i) {
-        sprintf(tmp, "%d", countdown[i]);
+        sprintf(tmp, "%d", countdown_ints[i]);
         draw_grounded_string(x + 110, y, ground_padding, ground_padding, color, BACKGROUND_COLOR, scale, frame_buff, tmp);
         update_display(frame_buff);
         usleep(COUNTDOWN_SLEEP);
@@ -233,10 +237,9 @@ void countdown(int x, int y, int scale, ushort *frame_buff) {
     update_display(frame_buff);
 }
 
-void goodbye(ushort *frame_buff) {
-    char *greeting = "GOODBYE!";
+void goodbye(pixel *frame_buff) {
     int ground_padding = 2;
-    ushort color = WHITE;
+    pixel color = WHITE;
     int scale = 4;
     int x = 90;
     int y = 120;
@@ -248,10 +251,7 @@ void goodbye(ushort *frame_buff) {
     update_display(frame_buff);
 }
 
-void print_congrats(ushort *frame_buff, ushort color) {
-    char *player_red = " RED WINS!";
-    char *player_blue = "BLUE WINS!";
-    char *draw = "IT'S A DRAW!";
+void print_congrats(pixel *frame_buff, pixel color) {
     int ground_padding = 2;
     int scale = 4;
     int x = 80;
@@ -259,9 +259,9 @@ void print_congrats(ushort *frame_buff, ushort color) {
     set_display_black(frame_buff);
     char *winner;
     if (color == RED)
-        winner = player_red;
+        winner = player_red_wins;
     else if (color == BLUE)
-        winner = player_blue;
+        winner = player_blue_wins;
     else
         winner = draw;
 
