@@ -1,5 +1,7 @@
 # Documentation for our Ping-Pong game
 
+To see the full version click *[here](https://hackmd.io/@APOsem/rJz3nJkqO)*.
+
 ## Table of Contents
 
 [TOC]
@@ -102,7 +104,7 @@ typedef struct {
     pixel color;
 } Ball;
 ```
->Structure for holding information about ball  
+>structure for holding information about ball  
 ---
 
 ``` C
@@ -152,7 +154,7 @@ typedef struct {
     pixel color;
 } Paddle;
 ```
->Structure for holding information about paddle  
+>structure for holding information about paddle  
 ---
 
 ``` C
@@ -186,7 +188,7 @@ typedef struct {
     bonus_type bonus_mode;
 } Bonus;
 ```
->Structure for holding information about bonus  
+>structure for holding information about bonus  
 ---
 
 ``` C
