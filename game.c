@@ -1,7 +1,6 @@
 // file for handling game objects
 // will handle colisions
 #include "game.h"
-
 #include "LED.h"
 #include "bonus.h"
 #include "compute.h"
@@ -11,17 +10,24 @@
 
 enum { NORMAL_LEVEL, HARD_LEVEL, NBR_LEVELS };
 
+/* threads for the game */
 void *terminal_listening();
 void *knobs_listening();
 void *lcd_output();
-void *led_output();
 
+/* intializes data for both paddles and the ball */
 void init_shared_data();
+
+/* frees allocated memory in shared data */
 void clean_shared_data();
 
-void init_paddle(Paddle *p, Position pos, ushort color);
-void init_ball(Ball *b, Position pos, Velocity velocity, ushort color, int radius);
-
+/*
+ * Changes ball position depending on its valocity
+ * Controls if ball hits paddle or hits the net
+ * returns 0 if no goal detected
+ * returns 1 if goal on right occured
+ * returns -1 if goal on left occured
+ */
 int move_ball(Ball *ball, Paddle *left, Paddle *right);
 
 static struct {
@@ -31,11 +37,11 @@ static struct {
     .r = 0,
 };
 
-int level;
-int last_hit;
+static int level;
+static int last_hit;
 static double acceleration;
 ushort *frame_buff;
-enum { RESUME, EXIT };
+enum pause_menu { RESUME, EXIT };
 
 static pthread_cond_t input_condvar;
 static pthread_cond_t output_condvar;
@@ -71,6 +77,7 @@ static struct shared {
         bool left, right;
     } knob_activate;
 } shared_data;
+
 
 void init_shared_data() {
     shared_data.quit = false;
@@ -109,6 +116,7 @@ void init_shared_data() {
     shared_data.bonuses.i = 0;
     shared_data.delete_bonus.delete = false;
 }
+
 
 void clean_shared_data() {
     if (shared_data.ball) free(shared_data.ball);
@@ -160,9 +168,6 @@ void start_game(ushort *fb, int lev) {
     set_display_black(fb);
 }
 
-// returns 0 if no goal detected
-// returns 1 if goal on right occured
-// returns -1 if goal on left occured
 int move_ball(Ball *ball, Paddle *left, Paddle *right) {
     int ret = 0;
     double new_angle;
@@ -344,7 +349,6 @@ void game_loop() {
     }
 }
 
-// terminal in game listening
 void *terminal_listening() {
     printf("Terminal thread running\n");
     pthread_mutex_lock(&mtx);
