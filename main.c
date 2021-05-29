@@ -12,9 +12,6 @@
 void *terminal_listening_main();
 void *knobs_listening_main();
 
-/* sets terminal to raw mode */
-void call_stty(int reset);
-
 static pthread_cond_t condvar;
 static pthread_mutex_t mtx_main;
 
@@ -26,7 +23,7 @@ struct shared {
 
 int main(int argc, char *argv[]) {
     if (display_init() && knobs_init() && led_init()) {
-        ushort *frame_buff = (ushort *)malloc(DISPLAY_HEIGHT * DISPLAY_WIDTH * sizeof(ushort));
+        pixel *frame_buff = (pixel*) malloc(DISPLAY_HEIGHT * DISPLAY_WIDTH * sizeof(pixel));
         if (frame_buff == NULL) {
             fprintf(stderr, "ERROR: Memory could not be allocated!\n");
         } else {
