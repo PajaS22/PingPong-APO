@@ -1,4 +1,3 @@
-// mzapo red & green & blue knobs
 #include "knobs.h"
 #include "mzapo_phys.h"
 #include "mzapo_regs.h"
@@ -11,7 +10,12 @@ static unsigned char *mem_base;
 
 static int8_t rk, gk, bk;  // last positions of knobs
 
-short circle_value(ushort val);
+/*
+ * the knob is split to two parts - right half is positive, the left is negative
+ * computes a position relative to zero
+ * returns number in range <-HALF_KNOB; HALF_KNOB>
+ */
+short circle_value(pixel val);
 
 bool knobs_init() {
     bool ret = true;
@@ -20,7 +24,7 @@ bool knobs_init() {
         fprintf(stderr, "ERROR: Physical address could not be mapped!\n");
         ret = false;
     }
-    // set starting values of knobs
+    // setting the starting values of knobs
     knobs_data kd = knobs_value();
     rk = kd.rk;
     gk = kd.gk;
@@ -46,12 +50,11 @@ knobs_data get_rel_knob_value() {
     return ret;
 }
 
-short circle_value(ushort val) {
+short circle_value(pixel val) {
     if (val > HALF_KNOB) val = val - 255 - 1;
     return -val;
 }
 
-// returns actual knobs position
 knobs_data knobs_value() {
     int32_t rgb_knobs_value = *(volatile uint32_t *)(mem_base + SPILED_REG_KNOBS_8BIT_o);
 
