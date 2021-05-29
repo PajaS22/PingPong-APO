@@ -1,5 +1,4 @@
 #include "compute.h"
-#include "headers.h"
 
 double my_abs(double n) {
     if (n < 0) n *= -1;

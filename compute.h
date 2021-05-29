@@ -1,6 +1,8 @@
 #ifndef COMPUTE_H
 #define COMPUTE_H
 
+#include "headers.h"
+
 /* return an absolute value of a double */
 double my_abs(double n);
 
