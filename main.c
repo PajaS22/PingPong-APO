@@ -8,11 +8,15 @@
 #define _POSIX_C_SOURCE 200112L
 #define _XOPEN_SOURCE 500
 
+/* threads */
 void *terminal_listening_main();
 void *knobs_listening_main();
 
-pthread_cond_t condvar;
-pthread_mutex_t mtx_main;
+/* sets terminal to raw mode */
+void call_stty(int reset);
+
+static pthread_cond_t condvar;
+static pthread_mutex_t mtx_main;
 
 struct shared {
     bool quit;
@@ -27,8 +31,6 @@ int main(int argc, char *argv[]) {
             fprintf(stderr, "ERROR: Memory could not be allocated!\n");
         } else {
             call_stty(0);
-
-            // threads
             shared_data_main.quit = false;
             shared_data_main.start = false;
             shared_data_main.move = 0;
@@ -68,15 +70,13 @@ int main(int argc, char *argv[]) {
                         pthread_join(thrs[i], NULL);
                     }
                     printf("All threads joined, starting game\n");
-                    if (selected + 1 == MENU_SELECTION) {
+                    if (selected + 1 == MENU_SELECTION) { // exit selected
                         printf("Exit selected\n");
-                        // exit selected
                         pthread_mutex_lock(&mtx_main);
                         shared_data_main.quit = true;
                         pthread_mutex_unlock(&mtx_main);
                     } else {
                         start_game(frame_buff, selected);
-
                         // game ended
                         start = false;
                         pthread_mutex_lock(&mtx_main);
@@ -173,9 +173,6 @@ void *knobs_listening_main() {
     pthread_mutex_unlock(&mtx_main);
     while (!quit && !start) {  // get input from knobs
         kd = get_rel_knob_value();
-
-        // printf("RGB: %d %d %d\n", kd.rk, kd.gk, kd.bk);
-        // printf("RGB butts: %d %d %d\n", kd.rb, kd.gb, kd.bb);
 
         if (kd.gk >= 1)
             move_dir = 1;
