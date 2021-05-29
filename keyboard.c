@@ -1,8 +1,6 @@
-#include "keyboard.h"
 #include <poll.h>
+#include "keyboard.h"
 #include "headers.h"
-
-#define KEYBOARD_TIMEOUT 100
 
 int keyboard_getc_timeout(unsigned char *c) {
     int fd = 0;  // stdin
