@@ -3,6 +3,7 @@
 #include "mzapo_phys.h"
 #include "mzapo_regs.h"
 
+// RBG DIODS COLORS
 #define RED_LED 0x00FF0000
 #define BLUE_LED 0x000000FF
 #define SWITCH_OFF 0x0
