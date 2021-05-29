@@ -15,11 +15,6 @@ int my_sign(double n) {
         return 0;
 }
 
-void multiply_vel(Velocity *vel, float mult) {
-    vel->X *= mult;
-    vel->Y *= mult;
-}
-
 float max(float a, float b) {
     float ret;
     (a > b) ? (ret = a) : (ret = b);
@@ -30,6 +25,11 @@ float min(float a, float b) {
     float ret;
     (a > b) ? (ret = b) : (ret = a);
     return ret;
+}
+
+void multiply_vel(Velocity *vel, float mult) {
+    vel->X *= mult;
+    vel->Y *= mult;
 }
 
 Velocity rotate(Velocity old_vel, double angle) {
