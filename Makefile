@@ -10,28 +10,25 @@ LDFLAGS = -L
 LDLIBS = -lrt -lpthread -lm
 
 SOURCES = main.c $(SRC_PATH)/mzapo_phys.c $(SRC_PATH)/mzapo_parlcd.c
-#SOURCES = main.c mzapo_phys.c mzapo_parlcd.c
 SOURCES += $(SRC_PATH)/font_prop14x16.c $(SRC_PATH)/font_rom8x16.c $(SRC_PATH)/font_types.h
-#SOURCES += font_prop14x16.c font_rom8x16.c font_types.h
 SOURCES += paddle.c ball.c knobs.c game.c LCD_output.c keyboard.c LED.c bonus.c compute.c
 
 TARGET_EXE = pingpong
 
-#TARGET_IP ?= 192.168.202.127
+TARGET_IP ?= 192.168.202.127
 ifeq ($(TARGET_IP),)
 ifneq ($(filter debug run,$(MAKECMDGOALS)),)
 $(warning The target IP address is not set)
 $(warning Run as "TARGET_IP=192.168.202.xxx make run" or modify Makefile)
-TARGET_IP ?= 192.168.202.207
-#TARGET_IP=192.168.202.214 make run
 endif
 endif
 TARGET_DIR ?= /tmp/$(shell whoami)
 TARGET_USER ?= root
 # for use from Eduroam network use TARGET_IP=localhost and enable next line
-#SSH_OPTIONS=-o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" -o "Port=2222"
-SSH_OPTIONS=-i ~/.ssh/mzapo-root-key
-SSH_OPTIONS=-o 'ProxyJump=svobop60@postel.felk.cvut.cz'
+SSH_OPTIONS=-o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" -o "Port=2222"
+SSH_OPTIONS=-i /opt/zynq/ssh-connect/mzapo-root-key
+#SSH_OPTIONS=-i ~/.ssh/mzapo-root-key
+#SSH_OPTIONS=-o 'ProxyJump=ctu_login@postel.felk.cvut.cz'
 
 OBJECTS += $(filter %.o,$(SOURCES:%.c=%.o))
 OBJECTS += $(filter %.o,$(SOURCES:%.cpp=%.o))
