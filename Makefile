@@ -10,7 +10,7 @@ LDFLAGS = -L
 LDLIBS = -lrt -lpthread -lm
 
 SOURCES = main.c $(SRC_PATH)/mzapo_phys.c $(SRC_PATH)/mzapo_parlcd.c
-SOURCES += $(SRC_PATH)/font_prop14x16.c $(SRC_PATH)/font_rom8x16.c $(SRC_PATH)/font_types.h
+SOURCES += $(SRC_PATH)/font_prop14x16.c $(SRC_PATH)/font_types.h
 SOURCES += paddle.c ball.c knobs.c game.c LCD_output.c keyboard.c LED.c bonus.c compute.c
 
 TARGET_EXE = pingpong
