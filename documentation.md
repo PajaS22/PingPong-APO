@@ -1,4 +1,4 @@
-# Documentation for our Ping-Pong game
+# Documentation for the Ping-Pong game
 
 To see the full version click *[here](https://hackmd.io/@APOsem/rJz3nJkqO)*.
 
