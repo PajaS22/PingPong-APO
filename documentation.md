@@ -6,6 +6,7 @@ To see the full version click *[here](https://hackmd.io/@APOsem/rJz3nJkqO)*.
 
 [TOC]
 
+---
 ## Main
 *files: main.c*  
 ``` C
@@ -18,18 +19,45 @@ int main(int argc, char *argv[]);
 void *terminal_listening_main();
 ```
 >terminal listening thread function  
->click *[here](#Terminal-thread)* to see more  
+>click *[here](#Terminal-thread-main)* to see more  
 ---
 ``` C
 void *knobs_listening_main();
 ```
 >knobs listening thread function  
->click *[here](#Knobs-thread)* to see more  
+>click *[here](#Knobs-thread-main)* to see more  
 ---
 ``` C
 void call_stty(int reset)
 ```
 >sets terminal to raw mode  
+---
+### Threads in main.c
+**There are three threads in main.c.**
+* Main thread listens to the terminal thread and the knobs thread and displays actual state of menu on LCD.
+* Terminal thread listens to user's keyboard and reports requests to the main thread.
+* Knobs thread listens to the three knobs and reports it to the main thread.
+
+#### Main thread
+Handles main menu and starts the game or exits the program.  
+Main thread listens to the terminal thread and the knobs thread and displays actual state of menu on LCD. If an option is chosen, it passes control to right function.  
+On game start it joins all the threads from main.c and when the game is ended, it creates them again.
+#### Terminal thread (main)
+The thread listens to the keyboard and reports requests to the main thread.
+
+| Key | Action                        |
+| :-: | ------------------------------|
+| q   | quit                          |
+| w   | move up in menu               |
+| s   | move down in menu             |
+| d   | enter selected option in menu |
+
+#### Knobs thread (main)
+The thread listens to the three knobs and reports requests to the gameloop thread.
+| Knob          | Action                |
+| --------------| ----------------------|
+| green rotate  | move in menu          |
+| green button  | select option in menu |
 ---
 ## Game
 *files: game.c, game.h*  
@@ -62,6 +90,7 @@ void start_game();
 void game_loop();
 ```
 >main loop of the game  
+>click *[here](#Gameloop-thread)* to see more  
 ---
 ``` C
 void new_round();
@@ -91,8 +120,70 @@ void maximal_angle(Velocity *vel);
 ```
 >rotates the velocity vector so it deviates from paddle's normal vector maximally by the MAXIMAL_VELOCITY_ANGLE  
 ---
+``` C
+void *terminal_listening();
+```
+>terminal listening thread function  
+>click *[here](#Terminal-thread-game)* to see more  
+---
+``` C
+void *knobs_listening();
+```
+>knobs listening thread function  
+>click *[here](#Knobs-thread-game)* to see more  
+---
+``` C
+void *lcd_output();
+```
+>LCD output thread function  
+>click *[here](#LCD-thread-game)* to see more  
+---
+### Threads in game.c
+**There are four threads in game.c.**  
+They are created when game is started in function *start_game()* and joined again after game end.
+* Main thread computes a new positions of the moving objects
+* Terminal thread listens to user's keyboard and reports it to the main thread
+* Knobs thread listens to the three knobs and reports it to main thread
+* LCD thread shows objects in their actual positions when signaled from the main thread
+#### Gameloop thread
+The thread runs through the game_loop function every 500 ms, where it:
+1. moves the ball and paddles
+2. controls collisions: ball & paddles, ball & bonuses
+3. confirmes requests for enlarging the player's paddle
+4. generates a new bonus every 5 seconds (up to 5 bonuses maximum can be displayed in the play field at the same time)
+5. resizes the paddle to its original length after the player choses to enlarge its paddle for 5 seconds
 
+#### Terminal thread (game)
+The thread listens to user's keyboard and reports requests to the gameloop thread.
 
+| Key | Action                              |
+| :-: | ------------------------------------|
+| q   | quit                                |
+| r   | move red paddle up                  |
+| f   | move red paddle down                |
+| i   | move blue paddle up                 |
+| k   | move blue paddle down               |
+| p   | pause                               |
+| w   | move up in menu                     |
+| s   | move down in menu                   |
+| d   | enter selected option in pause menu |
+
+#### Knobs thread (game)
+The thread listens to the three knobs and reports requests to the gameloop thread.
+| Knob          | Action                               |
+| --------------| -------------------------------------|
+| green rotate  | move in pause menu                   |
+| red rotate    | move red paddle                      |
+| blue rotate   | move blue paddle                     |
+| green button  | pause or (when in pause menu) select |
+| red button    | activate bonus - enlarge paddle      |
+| blue button   | activate bonus - enlarge paddle      |
+
+#### LCD thread (game)
+The thread displays all objects on the LCD when signaled from the gameloop thread.  
+When an object is moving, the program prints the object on its previous position in the color of background and then it prints it in its actual color in the new position.  
+
+---
 ## Ball
 *files: ball.c, ball.h*  
 
@@ -409,72 +500,5 @@ Mzapo templates are support files for work with mzapo board. It consists of:
 * definitions of fonts (font_prop14x16.c, font_types.h)
 * work with LCD (mzapo_parlcd.c mzapo_parlcd.h)
 * support for memory adressing (mzpo_phys.c mzpo_phys.h mzpo_regs.h)
-## Threads in main.c
-### Main thread
-**There are three threads in main.c.**
-* Main thread listens to the terminal thread and the knobs thread and displays everything on LCD.
-* Terminal thread listens to user's keyboard and reports requests to the main thread.
-* Knobs thread listens to the three knobs and reports it to the main thread.
-### Terminal thread
-The thread listens to the keyboard and reports requests to the main thread.
-
-| Key | Action                        |
-| :-: | ------------------------------|
-| q   | quit                          |
-| w   | move up in menu               |
-| s   | move down in menu             |
-| d   | enter selected option in menu |
-
-### Knobs thread
-The thread listens to the three knobs and reports requests to the gameloop thread.
-| Knob          | Action                |
-| --------------| ----------------------|
-| green rotate  | move in menu          |
-| green button  | select option in menu |
-
-## Threads in game.c
-**There are four threads in game.c.**
-* Main thread computes a new positions of the moving objects
-* Terminal thread listens to user's keyboard and reports it to the main thread
-* Knobs thread listens to the three knobs and reports it to main thread
-* LCD thread shows objects in their actual positions when signaled from the main thread
-### Gameloop thread
-The thread runs through the game_loop function every 500 ms, where it:
-1. moves the ball and paddles
-2. controls collisions: ball & paddles, ball & bonuses
-3. confirmes requests for enlarging the player's paddle
-4. generates a new bonus every 5 seconds (up to 5 bonuses maximum can be displayed in the play field at the same time)
-5. resizes the paddle to its original length after the player choses to enlarge its paddle for 5 seconds
-
-### Terminal thread
-The thread listens to user's keyboard and reports requests to the gameloop thread.
-
-| Key | Action                              |
-| :-: | ------------------------------------|
-| q   | quit                                |
-| r   | move red paddle up                  |
-| f   | move red paddle down                |
-| i   | move blue paddle up                 |
-| k   | move blue paddle down               |
-| p   | pause                               |
-| w   | move up in menu                     |
-| s   | move down in menu                   |
-| d   | enter selected option in pause menu |
-
-### Knobs thread
-The thread listens to the three knobs and reports requests to the gameloop thread.
-| Knob          | Action                               |
-| --------------| -------------------------------------|
-| green rotate  | move in pause menu                   |
-| red rotate    | move red paddle                      |
-| blue rotate   | move blue paddle                     |
-| green button  | pause or (when in pause menu) select |
-| red button    | activate bonus - enlarge paddle      |
-| blue button   | activate bonus - enlarge paddle      |
-
-### LCD thread
-The thread displays all objects on the LCD when signaled from the gameloop thread.  
-When an object is moving, the program prints the object on its previous position in the color of background and then it prints it in its actual color in the new position.  
-
 
 ###### tags: `PingPong` `Documentation`
