@@ -22,8 +22,8 @@ If you are a total beginner to the game, read this:
 * You can control the menu by rotating green knob.
 * Select an option by clicking the green button on the green knob.
 * The menu gives you three options:
-    * Easy ... starts the game with an easy mode
-    * Hard ... starts the game with a hard mode
+    * Easy ... starts the game in easy mode
+    * Hard ... starts the game in hard mode (the ball accelerates faster)
     * Exit ... shutdowns the application
 
 ### In-game control
