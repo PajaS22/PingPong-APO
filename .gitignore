@@ -1,4 +1,4 @@
 *.o
 depend
-change_me
+.vscode
 connect.gdb
