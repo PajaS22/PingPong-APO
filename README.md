@@ -54,8 +54,10 @@ If you are a total beginner to the game, read this:
 ## Compilation and run process for dummies
 1. Connect the MicroZed board to your local internet network.
 2. Connect your PC to your local internet network.
-3. Change *TARGET_IP* on line 18 in our Makefile to your IP adress.
-4. Run this command in your terminal while being in the directory of our pingpong game (it will compile the project and send it to the MicroZed board).  
+3. Install compiler for ARM on your computer.  
+`sudo apt install crossbuild-essential-armhf`
+5. Change *TARGET_IP* on line 18 in our Makefile to your IP adress.
+6. Run this command in your terminal while being in the directory of our pingpong game (it will compile the project and send it to the MicroZed board).  
 Then you must change the IP address in the command as well:  
 `TARGET_IP=192.168.202.214 make run`
 5. Enjoy the game!
